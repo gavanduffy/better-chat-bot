@@ -1,5 +1,6 @@
 import "server-only";
 
+import openRouterCatalogJson from "../../../or.json";
 import { createOllama } from "ollama-ai-provider-v2";
 import { openai } from "@ai-sdk/openai";
 import { google } from "@ai-sdk/google";
@@ -28,6 +29,61 @@ const groq = createGroq({
   baseURL: process.env.GROQ_BASE_URL || "https://api.groq.com/openai/v1",
   apiKey: process.env.GROQ_API_KEY,
 });
+
+type OpenRouterPricing = {
+  prompt?: string | number | null;
+  completion?: string | number | null;
+  request?: string | number | null;
+};
+
+type OpenRouterCatalogEntry = {
+  id?: string;
+  pricing?: OpenRouterPricing | null;
+};
+
+const openRouterCatalogEntries = (
+  (openRouterCatalogJson as { data?: OpenRouterCatalogEntry[] })?.data ?? []
+).filter(Boolean);
+
+const OPEN_ROUTER_FREE_PRICING_FIELDS: Array<keyof OpenRouterPricing> = [
+  "prompt",
+  "completion",
+  "request",
+];
+
+const isZeroCost = (value: string | number | null | undefined) => {
+  if (value === undefined || value === null || value === "") return true;
+  const numericValue =
+    typeof value === "number" ? value : Number.parseFloat(String(value));
+  if (!Number.isFinite(numericValue)) return false;
+  return numericValue === 0;
+};
+
+const isFreeOpenRouterModel = (
+  entry: OpenRouterCatalogEntry,
+): entry is OpenRouterCatalogEntry & { id: string } => {
+  if (!entry?.id) return false;
+  if (!entry.id.includes("/")) return false;
+  if (!entry.id.endsWith(":free")) return false;
+  const pricing = entry.pricing ?? {};
+  return OPEN_ROUTER_FREE_PRICING_FIELDS.every((field) =>
+    isZeroCost(pricing[field]),
+  );
+};
+
+const createOpenRouterModelKey = (id: string) => id.replace(/\//g, "-");
+
+const openRouterFreeModelEntries = openRouterCatalogEntries
+  .filter(isFreeOpenRouterModel)
+  .map((entry) => ({
+    id: entry.id,
+    key: createOpenRouterModelKey(entry.id),
+  }))
+  .sort((a, b) => a.key.localeCompare(b.key));
+
+const openRouterStaticModels = Object.fromEntries(
+  openRouterFreeModelEntries.map(({ id, key }) => [key, openrouter(id)]),
+) as Record<string, LanguageModelV2>;
 
 const staticModels = {
   openai: {
@@ -69,27 +125,19 @@ const staticModels = {
     "gpt-oss-120b": groq("openai/gpt-oss-120b"),
     "qwen3-32b": groq("qwen/qwen3-32b"),
   },
-  openRouter: {
-    "gpt-oss-20b:free": openrouter("openai/gpt-oss-20b:free"),
-    "qwen3-8b:free": openrouter("qwen/qwen3-8b:free"),
-    "qwen3-14b:free": openrouter("qwen/qwen3-14b:free"),
-    "qwen3-coder:free": openrouter("qwen/qwen3-coder:free"),
-    "deepseek-r1:free": openrouter("deepseek/deepseek-r1-0528:free"),
-    "deepseek-v3:free": openrouter("deepseek/deepseek-chat-v3-0324:free"),
-    "gemini-2.0-flash-exp:free": openrouter("google/gemini-2.0-flash-exp:free"),
-  },
+  openRouter: openRouterStaticModels,
 };
+
+const openRouterUnsupportedModels = Object.values(
+  staticModels.openRouter,
+) as LanguageModel[];
 
 const staticUnsupportedModels = new Set([
   staticModels.openai["o4-mini"],
   staticModels.ollama["gemma3:1b"],
   staticModels.ollama["gemma3:4b"],
   staticModels.ollama["gemma3:12b"],
-  staticModels.openRouter["gpt-oss-20b:free"],
-  staticModels.openRouter["qwen3-8b:free"],
-  staticModels.openRouter["qwen3-14b:free"],
-  staticModels.openRouter["deepseek-r1:free"],
-  staticModels.openRouter["gemini-2.0-flash-exp:free"],
+  ...openRouterUnsupportedModels,
 ]);
 
 const staticSupportImageInputModels = {

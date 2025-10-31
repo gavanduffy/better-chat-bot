@@ -1,3 +1,4 @@
+import openRouterCatalogJson from "../../../or.json";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import {
   OPENAI_FILE_MIME_TYPES,
@@ -44,5 +45,61 @@ describe("customModelProvider file support metadata", () => {
     expect(getFilePartSupportedMimeTypes(model)).toEqual(
       Array.from(ANTHROPIC_FILE_MIME_TYPES),
     );
+  });
+});
+
+describe("customModelProvider openRouter models", () => {
+  const catalogEntries = (
+    (
+      openRouterCatalogJson as {
+        data?: Array<{
+          id?: string;
+          pricing?: {
+            prompt?: string | number | null;
+            completion?: string | number | null;
+            request?: string | number | null;
+          } | null;
+        }>;
+      }
+    )?.data ?? []
+  ).filter(Boolean);
+
+  const pricingFields: Array<"prompt" | "completion" | "request"> = [
+    "prompt",
+    "completion",
+    "request",
+  ];
+
+  const isZeroCost = (value: string | number | null | undefined) => {
+    if (value === undefined || value === null || value === "") return true;
+    const numericValue =
+      typeof value === "number" ? value : Number.parseFloat(String(value));
+    if (!Number.isFinite(numericValue)) return false;
+    return numericValue === 0;
+  };
+
+  const expectedModelNames = catalogEntries
+    .filter((entry) => {
+      if (!entry.id) return false;
+      if (!entry.id.includes("/")) return false;
+      if (!entry.id.endsWith(":free")) return false;
+      const pricing = entry.pricing ?? {};
+      return pricingFields.every((field) => isZeroCost(pricing[field]));
+    })
+    .map((entry) => entry.id!.replace(/\//g, "-"))
+    .sort();
+
+  it("includes all free OpenRouter models", () => {
+    const { customModelProvider } = modelsModule;
+    const openRouterProvider = customModelProvider.modelsInfo.find(
+      (item) => item.provider === "openRouter",
+    );
+
+    expect(openRouterProvider).toBeDefined();
+    const modelNames = openRouterProvider?.models
+      .map((item) => item.name)
+      .sort();
+
+    expect(modelNames).toEqual(expectedModelNames);
   });
 });
