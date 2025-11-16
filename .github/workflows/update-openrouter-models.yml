@@ -1,0 +1,56 @@
+name: Update OpenRouter Models
+
+on:
+  schedule:
+    - cron: '0 12 * * *'  # Run daily at 12:00 UTC
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  update-models:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install axios cheerio
+
+      - name: Run update script
+        id: update
+        run: node .github/scripts/update-openrouter-models.js
+
+      - name: Create Pull Request
+        if: steps.update.outputs.has-changes == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="chore/update-openrouter-models-$(date +%Y%m%d-%H%M%S)"
+          git checkout -b $BRANCH
+          git add src/lib/ai/models.ts
+          git commit -m "chore: update OpenRouter models
+
+          Automated update of free OpenRouter models"
+          git push origin $BRANCH
+          gh pr create \
+            --title "chore: Update OpenRouter models ($(date +%Y-%m-%d))" \
+            --body "Automated update adding new free OpenRouter models to \`models.ts\`.
+
+            - Added new models from OpenRouter API
+            - Sorted alphabetically
+
+            Please review and merge if appropriate." \
+            --base main \
+            --head $BRANCH \
+            --draft
