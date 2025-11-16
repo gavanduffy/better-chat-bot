@@ -126,7 +126,10 @@
       "searchOptionsDescription": "Vous pouvez passer des options de recherche au chatbot, comme le nombre maximum de résultats de recherche, la date de recherche, etc.",
       "defaultToolKit": {
         "visualization": "Visualisation de données",
-        "webSearch": "Rechercher sur le le Web"
+        "webSearch": "Rechercher sur le le Web",
+        "http": "Requête HTTP",
+        "code": "Exécution de code",
+        "artifact": "Artifact"
       }
     },
     "VoiceChat": {

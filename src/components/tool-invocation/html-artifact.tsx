@@ -1,22 +1,22 @@
 "use client";
 
+import { useCopy } from "@/hooks/use-copy";
 import { ToolUIPart } from "ai";
-import { memo, useMemo, useState, useRef, useEffect } from "react";
 import { cn } from "lib/utils";
 import {
   CheckIcon,
+  CodeIcon,
   CopyIcon,
   DownloadIcon,
+  EyeIcon,
   MaximizeIcon,
   MinimizeIcon,
-  CodeIcon,
-  EyeIcon,
 } from "lucide-react";
-import { Button } from "ui/button";
-import { useCopy } from "@/hooks/use-copy";
-import { Badge } from "ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { CodeBlock } from "ui/CodeBlock";
+import { Badge } from "ui/badge";
+import { Button } from "ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 
 interface HtmlArtifactProps {
   part: ToolUIPart;
@@ -27,22 +27,85 @@ export const HtmlArtifact = memo(function HtmlArtifact({
 }: HtmlArtifactProps) {
   const { copy, copied } = useCopy();
   const [isExpanded, setIsExpanded] = useState(false);
-  const [activeTab, setActiveTab] = useState<"preview" | "code">("preview");
+  const [activeTab, setActiveTab] = useState<"preview" | "code" | "files">(
+    "preview",
+  );
+  const [selectedFile, setSelectedFile] = useState<string>("index.html");
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const input = part.input as {
     title: string;
     description: string | null;
     html: string;
+    files?: Array<{
+      name: string;
+      content: string;
+      type: "css" | "js" | "ts";
+    }>;
   };
 
-  const { title, description, html } = input;
+  const { title, description, html, files } = input;
 
   // Create a blob URL for the iframe to ensure proper sandboxing
   const iframeSrc = useMemo(() => {
-    const blob = new Blob([html], { type: "text/html" });
+    let processedHtml = html;
+
+    // If there are additional files, inject them into the HTML
+    if (files && files.length > 0) {
+      // Group files by type
+      const cssFiles = files.filter((f) => f.type === "css");
+      const jsFiles = files.filter((f) => f.type === "js");
+      const tsFiles = files.filter((f) => f.type === "ts");
+
+      // Inject CSS files into the head
+      if (cssFiles.length > 0) {
+        const cssContent = cssFiles
+          .map(
+            (file) =>
+              `<style data-file="${file.name}">\n${file.content}\n</style>`,
+          )
+          .join("\n");
+
+        // Try to inject before </head>, or at the start of <head>, or at the start of the document
+        if (processedHtml.includes("</head>")) {
+          processedHtml = processedHtml.replace(
+            "</head>",
+            `${cssContent}\n</head>`,
+          );
+        } else if (processedHtml.includes("<head>")) {
+          processedHtml = processedHtml.replace(
+            "<head>",
+            `<head>\n${cssContent}`,
+          );
+        } else {
+          processedHtml = cssContent + processedHtml;
+        }
+      }
+
+      // Inject JS/TS files into the body
+      if (jsFiles.length > 0 || tsFiles.length > 0) {
+        const jsContent = [...jsFiles, ...tsFiles]
+          .map(
+            (file) =>
+              `<script data-file="${file.name}">\n${file.content}\n</script>`,
+          )
+          .join("\n");
+
+        // Try to inject before </body>, or at the end of the document
+        if (processedHtml.includes("</body>")) {
+          processedHtml = processedHtml.replace(
+            "</body>",
+            `${jsContent}\n</body>`,
+          );
+        } else {
+          processedHtml = processedHtml + jsContent;
+        }
+      }
+    }
+
+    const blob = new Blob([processedHtml], { type: "text/html" });
     return URL.createObjectURL(blob);
-  }, [html]);
+  }, [html, files]);
 
   // Cleanup blob URL on unmount
   useEffect(() => {
@@ -86,7 +149,7 @@ export const HtmlArtifact = memo(function HtmlArtifact({
 
       <Tabs
         value={activeTab}
-        onValueChange={(v) => setActiveTab(v as "preview" | "code")}
+        onValueChange={(v) => setActiveTab(v as "preview" | "code" | "files")}
         className="w-full"
       >
         <div className="flex items-center justify-between mb-2">
@@ -99,6 +162,12 @@ export const HtmlArtifact = memo(function HtmlArtifact({
               <CodeIcon className="size-3 mr-1.5" />
               Code
             </TabsTrigger>
+            {files && files.length > 0 && (
+              <TabsTrigger value="files" className="text-xs">
+                <CodeIcon className="size-3 mr-1.5" />
+                Files ({files.length + 1})
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <div className="flex items-center gap-1">
@@ -161,6 +230,60 @@ export const HtmlArtifact = memo(function HtmlArtifact({
             <CodeBlock lang="html" code={html} />
           </div>
         </TabsContent>
+
+        {files && files.length > 0 && (
+          <TabsContent value="files" className="mt-0">
+            <div className="flex gap-2 h-[500px]">
+              {/* File list sidebar */}
+              <div className="w-48 border rounded-lg overflow-auto bg-muted/20">
+                <div className="p-2 space-y-1">
+                  <button
+                    onClick={() => setSelectedFile("index.html")}
+                    className={cn(
+                      "w-full text-left px-3 py-2 rounded text-xs hover:bg-accent transition-colors",
+                      selectedFile === "index.html" && "bg-accent",
+                    )}
+                  >
+                    📄 index.html
+                  </button>
+                  {files.map((file) => (
+                    <button
+                      key={file.name}
+                      onClick={() => setSelectedFile(file.name)}
+                      className={cn(
+                        "w-full text-left px-3 py-2 rounded text-xs hover:bg-accent transition-colors",
+                        selectedFile === file.name && "bg-accent",
+                      )}
+                    >
+                      {file.type === "css" && "🎨"}
+                      {file.type === "js" && "📜"}
+                      {file.type === "ts" && "📘"} {file.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* File content viewer */}
+              <div className="flex-1 border rounded-lg overflow-auto">
+                {selectedFile === "index.html" ? (
+                  <CodeBlock lang="html" code={html} />
+                ) : (
+                  (() => {
+                    const file = files.find((f) => f.name === selectedFile);
+                    if (!file) return null;
+                    const lang =
+                      file.type === "ts"
+                        ? "typescript"
+                        : file.type === "js"
+                          ? "javascript"
+                          : "css";
+                    return <CodeBlock lang={lang} code={file.content} />;
+                  })()
+                )}
+              </div>
+            </div>
+          </TabsContent>
+        )}
       </Tabs>
 
       <div className="flex items-center gap-2 text-xs text-muted-foreground">

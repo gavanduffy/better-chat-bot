@@ -127,7 +127,10 @@
       "searchOptionsDescription": "您可以向聊天机器人传递搜索选项，例如搜索结果的最大数量、搜索日期等。",
       "defaultToolKit": {
         "visualization": "数据可视化",
-        "webSearch": "网页搜寻"
+        "webSearch": "网页搜寻",
+        "http": "HTTP 请求",
+        "code": "代码执行",
+        "artifact": "Artifact"
       }
     },
     "VoiceChat": {

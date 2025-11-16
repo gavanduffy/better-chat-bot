@@ -2,14 +2,14 @@
 import { DefaultToolName } from "lib/ai/tools";
 import { cn } from "lib/utils";
 import {
-  TrendingUpIcon,
   ChartColumnIcon,
   ChartPieIcon,
-  GlobeIcon,
-  HardDriveUploadIcon,
   CodeIcon,
+  GlobeIcon,
   HammerIcon,
+  HardDriveUploadIcon,
   TableOfContents,
+  TrendingUpIcon,
 } from "lucide-react";
 import { useMemo } from "react";
 
@@ -56,6 +56,9 @@ export function DefaultToolIcon({
     }
     if (name === DefaultToolName.PythonExecution) {
       return <CodeIcon className={cn("size-3.5 text-blue-400", className)} />;
+    }
+    if (name === DefaultToolName.HtmlArtifact) {
+      return <CodeIcon className={cn("size-3.5 text-purple-400", className)} />;
     }
     return <HammerIcon className={cn("size-3.5", className)} />;
   }, [name]);
