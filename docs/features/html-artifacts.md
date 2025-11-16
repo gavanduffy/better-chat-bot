@@ -2,6 +2,15 @@
 
 HTML Artifacts (also known as Canvas in some AI assistants) allow the AI to create interactive HTML documents that are rendered directly in the chat interface. This feature is similar to Claude Artifacts and Gemini Canvas.
 
+## Quick Start
+
+To enable HTML Artifacts in your chat:
+
+1. Open chat preferences (click the settings icon or press `⌘P`)
+2. Navigate to the "Tools" section
+3. Enable the **"Artifact"** toolkit
+4. Start chatting! The AI can now create interactive HTML artifacts
+
 ## Overview
 
 The HTML Artifact feature enables the AI to:
