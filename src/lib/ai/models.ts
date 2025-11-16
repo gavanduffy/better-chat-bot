@@ -81,6 +81,8 @@ const staticModels = {
     "mistral-small-3.2:free": openrouter(
       "mistralai/mistral-small-3.2-24b-instruct:free",
     ),
+    "sherlock-think-alpha": openrouter("openrouter/sherlock-think-alpha"),
+    "sherlock-dash-alpha": openrouter("openrouter/sherlock-dash-alpha"),
   },
 };
 
