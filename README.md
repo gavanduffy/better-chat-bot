@@ -28,6 +28,7 @@ You only need **one AI Provider API Key** (OpenAI, Claude, Gemini, etc.). Everyt
 • **Multi-AI Support** - Integrates all major LLMs: OpenAI, Anthropic, Google, xAI, Ollama, and more  
 • **Powerful Tools** - MCP protocol, web search, JS/Python code execution, data visualization  
 • **Image Generation** - Create and edit images with AI models (OpenAI, Google Gemini, xAI)  
+• **HTML Artifacts** - Create interactive web pages, games, and visualizations (Claude Artifacts style)  
 • **Automation** - Custom agents, visual workflows, artifact generation  
 • **Collaboration** - Share agents, workflows, and MCP configurations with your team  
 • **Voice Assistant** - Realtime voice chat with full MCP tool integration  
@@ -409,6 +410,7 @@ Planned features coming soon to better-chatbot:
 
 - [x] **File Upload & Storage** (Vercel Blob integration)
 - [x] **Image Generation**
+- [x] **HTML Artifacts / Canvas** (interactive HTML documents rendered in chat)
 - [ ] **Collaborative Document Editing** (like OpenAI Canvas: user & assistant co-editing)
 - [ ] **RAG (Retrieval-Augmented Generation)**
 - [ ] **Web-based Compute** (with [WebContainers](https://webcontainers.io) integration)
