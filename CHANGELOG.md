@@ -1,5 +1,16 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- **HTML Artifacts / Canvas**: New feature allowing AI to create interactive HTML documents rendered in chat
+  - Sandboxed iframe rendering with security controls
+  - Preview/Code tab interface for viewing artifacts
+  - Copy to clipboard and download functionality
+  - Support for HTML/CSS/JavaScript with CDN library loading
+  - Comprehensive documentation with 12+ usage examples
+  - Full test coverage for artifact tool
+
 ## [1.25.0](https://github.com/cgoinglove/better-chatbot/compare/v1.24.0...v1.25.0) (2025-10-30)
 
 
