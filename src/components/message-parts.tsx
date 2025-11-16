@@ -726,6 +726,15 @@ const ImageGeneratorToolInvocation = dynamic(
   },
 );
 
+const HtmlArtifact = dynamic(
+  () =>
+    import("./tool-invocation/html-artifact").then((mod) => mod.HtmlArtifact),
+  {
+    ssr: false,
+    loading,
+  },
+);
+
 // Local shortcuts for tool invocation approval/rejection
 const approveToolInvocationShortcut: Shortcut = {
   description: "approveToolInvocation",
@@ -900,6 +909,10 @@ export const ToolMessagePart = memo(
             type="python"
           />
         );
+      }
+
+      if (toolName === DefaultToolName.HtmlArtifact) {
+        return <HtmlArtifact part={part} key={part.toolCallId} />;
       }
 
       if (state === "output-available") {
