@@ -1,22 +1,22 @@
 "use client";
 
+import { useCopy } from "@/hooks/use-copy";
 import { ToolUIPart } from "ai";
-import { memo, useMemo, useState, useRef, useEffect } from "react";
 import { cn } from "lib/utils";
 import {
   CheckIcon,
+  CodeIcon,
   CopyIcon,
   DownloadIcon,
+  EyeIcon,
   MaximizeIcon,
   MinimizeIcon,
-  CodeIcon,
-  EyeIcon,
 } from "lucide-react";
-import { Button } from "ui/button";
-import { useCopy } from "@/hooks/use-copy";
-import { Badge } from "ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { CodeBlock } from "ui/CodeBlock";
+import { Badge } from "ui/badge";
+import { Button } from "ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 
 interface HtmlArtifactProps {
   part: ToolUIPart;
