@@ -64,6 +64,7 @@ import { notify } from "lib/notify";
 import { ModelProviderIcon } from "ui/model-provider-icon";
 import { appStore } from "@/app/store";
 import { BACKGROUND_COLORS, EMOJI_DATA } from "lib/const";
+import { TTSButton } from "./tts-button";
 
 type MessagePart = UIMessage["parts"][number];
 type TextMessagePart = Extract<MessagePart, { type: "text" }>;
@@ -376,6 +377,7 @@ export const AssistMessagePart = memo(function AssistMessagePart({
       </div>
       {showActions && (
         <div className="flex w-full">
+          <TTSButton text={part.text} />
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
