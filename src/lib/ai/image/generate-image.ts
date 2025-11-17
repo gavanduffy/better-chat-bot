@@ -8,7 +8,7 @@ import { safe, watchError } from "ts-safe";
 import { getBase64Data } from "lib/file-storage/storage-utils";
 import { serverFileStorage } from "lib/file-storage";
 import { openai } from "@ai-sdk/openai";
-import { xai } from "@ai-sdk/xai";
+import { createOpenAI } from "@ai-sdk/openai";
 
 import {
   FilePart,
@@ -17,6 +17,11 @@ import {
   TextPart,
   experimental_generateImage,
 } from "ai";
+
+const litellm = createOpenAI({
+  baseURL: "https://api.euan.live/v1",
+  apiKey: process.env.XAI_API_KEY || "",
+});
 import { isString } from "lib/utils";
 import logger from "logger";
 
@@ -59,7 +64,7 @@ export async function generateImageWithXAI(
   options: GenerateImageOptions,
 ): Promise<GeneratedImageResult> {
   return experimental_generateImage({
-    model: xai.image("grok-2-image"),
+    model: litellm.image("grok-2-image"),
     abortSignal: options.abortSignal,
     prompt: options.prompt,
   }).then((res) => {

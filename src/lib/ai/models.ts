@@ -1,10 +1,9 @@
 import "server-only";
 
 import { createOllama } from "ollama-ai-provider-v2";
-import { openai } from "@ai-sdk/openai";
+import { openai, createOpenAI } from "@ai-sdk/openai";
 import { google } from "@ai-sdk/google";
 import { anthropic } from "@ai-sdk/anthropic";
-import { xai } from "@ai-sdk/xai";
 import { LanguageModelV2, openrouter } from "@openrouter/ai-sdk-provider";
 import { createGroq } from "@ai-sdk/groq";
 import { LanguageModel } from "ai";
@@ -27,6 +26,10 @@ const ollama = createOllama({
 const groq = createGroq({
   baseURL: process.env.GROQ_BASE_URL || "https://api.groq.com/openai/v1",
   apiKey: process.env.GROQ_API_KEY,
+});
+const litellm = createOpenAI({
+  baseURL: "https://api.euan.live/v1",
+  apiKey: process.env.XAI_API_KEY || "",
 });
 
 const staticModels = {
@@ -51,10 +54,12 @@ const staticModels = {
     "opus-4.1": anthropic("claude-opus-4-1"),
   },
   xai: {
-    "grok-4-fast": xai("grok-4-fast-non-reasoning"),
-    "grok-4": xai("grok-4"),
-    "grok-3": xai("grok-3"),
-    "grok-3-mini": xai("grok-3-mini"),
+    "grok-4-fast": litellm("grok-4-fast-non-reasoning"),
+    "grok-4": litellm("grok-4"),
+    "grok-3": litellm("grok-3"),
+    "grok-3-mini": litellm("grok-3-mini"),
+    "grok-dash-alpha": litellm("grok-dash-alpha"),
+    "grok-think-alpha": litellm("grok-think-alpha"),
   },
   ollama: {
     "gemma3:1b": ollama("gemma3:1b"),
@@ -153,6 +158,8 @@ registerFileSupport(staticModels.xai["grok-4-fast"], XAI_FILE_MIME_TYPES);
 registerFileSupport(staticModels.xai["grok-4"], XAI_FILE_MIME_TYPES);
 registerFileSupport(staticModels.xai["grok-3"], XAI_FILE_MIME_TYPES);
 registerFileSupport(staticModels.xai["grok-3-mini"], XAI_FILE_MIME_TYPES);
+registerFileSupport(staticModels.xai["grok-dash-alpha"], XAI_FILE_MIME_TYPES);
+registerFileSupport(staticModels.xai["grok-think-alpha"], XAI_FILE_MIME_TYPES);
 registerFileSupport(
   staticModels.openRouter["gemini-2.0-flash-exp:free"],
   GEMINI_FILE_MIME_TYPES,
