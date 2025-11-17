@@ -51,6 +51,7 @@ Built with Vercel AI SDK and Next.js, combining the best features of leading AI 
     - [🌐 Web Search](#-web-search)
     - [⚡️ JS,PYTHON Executor](#️-jspython-executor)
     - [📊 Data Visualization Tools](#-data-visualization-tools)
+    - [🔊 Text-to-Speech (TTS)](#-text-to-speech-tts)
 - [Getting Started](#getting-started)
   - [Quick Start (Docker Compose Version) 🐳](#quick-start-docker-compose-version-)
   - [Quick Start (Local Version) 🚀](#quick-start-local-version-)
@@ -208,6 +209,18 @@ It is a simple JS execution tool.
 - **Data Type Support**: Proper formatting for strings, numbers, dates, and booleans
 
 **Chart Generation**: Visualize data with various chart types (bar, line, pie charts)
+
+#### 🔊 Text-to-Speech (TTS)
+
+Built-in text-to-speech functionality powered by [APIpie.ai](https://apipie.ai). Listen to AI responses with high-quality voices from multiple providers.
+
+- **Multiple Providers:** ElevenLabs, OpenAI, Cartesia Sonic 2, Deepgram
+- **Voice Options:** 30+ professional voices with different accents and characteristics
+- **Easy Setup:** Add `APIPIE_API_KEY` to `.env` to enable TTS
+- **Interactive Controls:** Play, stop, and configure voices directly from chat messages
+- **Latest Models:** Includes ElevenLabs Flash v2.5, Multilingual v2, and Turbo v2.5
+
+Get your API key at [apipie.ai/profile/api-keys](https://apipie.ai/profile/api-keys). See [TTS documentation](docs/TTS_FEATURE.md) for detailed setup and usage.
 
 > Additionally, many other tools are provided, such as an HTTP client for API requests and more.
 
