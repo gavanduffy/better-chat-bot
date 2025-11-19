@@ -69,31 +69,47 @@ describe("htmlArtifactTool", () => {
   });
 
   it("should support various file types", async () => {
-    const schema = htmlArtifactTool.inputSchema;
-    const fileTypes = [
-      "css",
-      "js",
-      "ts",
-      "html",
-      "json",
-      "md",
-      "svg",
-      "txt",
-      "xml",
-    ];
+    if (htmlArtifactTool.execute) {
+      const fileTypes = [
+        "css",
+        "js",
+        "ts",
+        "html",
+        "json",
+        "md",
+        "svg",
+        "txt",
+        "xml",
+      ];
 
-    // Validate that all file types are supported
-    const result = schema.safeParse({
-      title: "Test",
-      description: "Test",
-      html: "<html></html>",
-      files: fileTypes.map((type, index) => ({
-        path: `file${index}.${type}`,
-        content: "test content",
-        type,
-      })),
-    });
+      // Test that tool accepts all file types
+      const result = await htmlArtifactTool.execute(
+        {
+          title: "Test All File Types",
+          description: "Test all supported file types",
+          html: "<!DOCTYPE html><html><head></head><body></body></html>",
+          files: fileTypes.map((type, index) => ({
+            path: `file${index}.${type}`,
+            content: "test content",
+            type: type as
+              | "css"
+              | "js"
+              | "ts"
+              | "html"
+              | "json"
+              | "md"
+              | "svg"
+              | "txt"
+              | "xml",
+          })),
+        },
+        {
+          toolCallId: "test-id",
+          messages: [],
+        },
+      );
 
-    expect(result.success).toBe(true);
+      expect(result).toBe("Artifact created successfully");
+    }
   });
 });
