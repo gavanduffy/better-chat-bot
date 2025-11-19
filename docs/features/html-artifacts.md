@@ -81,6 +81,56 @@ The AI will create:
 - Interactive controls
 - Educational explanations
 
+### Example 5: Multi-Page Portfolio Website
+
+```
+Create a multi-page portfolio website with a home page, about page, and projects page. 
+Use shared CSS for consistent styling and separate JS files for each page's functionality.
+```
+
+The AI will generate:
+- `index.html` - Home page with navigation
+- `pages/about.html` - About page
+- `pages/projects.html` - Projects showcase
+- `styles/main.css` - Shared styles
+- `styles/responsive.css` - Responsive design rules
+- `scripts/navigation.js` - Navigation logic
+- `scripts/animations.js` - Page animations
+- Downloads as a ZIP file with proper folder structure
+
+### Example 6: Data Dashboard with Configuration
+
+```
+Create a data dashboard that loads configuration from a JSON file and displays 
+multiple charts. Include sample data files and documentation.
+```
+
+The AI will create:
+- `index.html` - Main dashboard page
+- `data/config.json` - Dashboard configuration
+- `data/sales.json` - Sample sales data
+- `data/users.json` - Sample user data
+- `styles/dashboard.css` - Dashboard styling
+- `src/charts.js` - Chart rendering logic
+- `src/data-loader.js` - Data loading utilities
+- `README.md` - Documentation for the project
+
+### Example 7: Component Library
+
+```
+Create a reusable component library with multiple HTML example pages showing different components
+```
+
+The AI will generate:
+- `index.html` - Component library overview
+- `examples/buttons.html` - Button examples
+- `examples/forms.html` - Form examples
+- `examples/cards.html` - Card examples
+- `components/button.js` - Button component
+- `components/form.js` - Form component
+- `styles/components.css` - Component styles
+- `styles/themes.css` - Theme variations
+
 ## Technical Details
 
 ### Tool Configuration
@@ -94,11 +144,33 @@ The HTML artifact tool is part of the "Artifact" toolkit. It's automatically ava
 {
   title: string;           // Short, descriptive title
   description: string | null;  // Brief description (optional)
-  html: string;           // Complete HTML document
+  html: string;           // Complete HTML document (main entry point)
+  files?: Array<{         // Optional array of additional files
+    path: string;         // File path (can include folders, e.g., 'src/app.js')
+    content: string;      // File content
+    type: 'css' | 'js' | 'ts' | 'html' | 'json' | 'md' | 'svg' | 'txt' | 'xml';
+  }>;
 }
 ```
 
 ### Supported Features
+
+**Multi-File Projects**:
+- Support for complex project structures with multiple files
+- Folder organization (e.g., `src/`, `styles/`, `data/`)
+- Multiple HTML pages (e.g., `index.html`, `about.html`, `contact.html`)
+- Automatic ZIP download for projects with multiple files
+
+**Supported File Types**:
+- **HTML** (`.html`) - Additional pages beyond the main index.html
+- **CSS** (`.css`) - Stylesheets
+- **JavaScript** (`.js`) - Scripts
+- **TypeScript** (`.ts`) - TypeScript files (auto-transpiled)
+- **JSON** (`.json`) - Data and configuration files
+- **Markdown** (`.md`) - Documentation files
+- **SVG** (`.svg`) - Vector graphics
+- **XML** (`.xml`) - Structured data
+- **Text** (`.txt`) - Plain text files
 
 **HTML/CSS/JavaScript**:
 - Full HTML5 support
@@ -140,11 +212,27 @@ This ensures:
 - Scrollable view for long documents
 - Easy to copy and learn from
 
+### Files Mode (Multi-File Projects)
+- File tree navigation with folder structure
+- Click to view any file in the project
+- Syntax highlighting for all supported file types
+- Visual icons for different file types:
+  - 📄 HTML files
+  - 🎨 CSS files
+  - 📜 JavaScript files
+  - 📘 TypeScript files
+  - 📋 JSON files
+  - 📝 Markdown files
+  - 🖼️ SVG files
+  - 📑 XML files
+
 ### Controls
 - **Copy**: Copy the HTML source to clipboard
-- **Download**: Download the artifact as an `.html` file
+- **Download**: Download the artifact
+  - Single file: Downloads as `.html` file
+  - Multi-file project: Downloads as `.zip` file with full folder structure
 - **Expand/Collapse**: Toggle between 400px and 600px height (Preview only)
-- **Tab Switch**: Switch between Preview and Code views
+- **Tab Switch**: Switch between Preview, Code, and Files views
 
 ## Best Practices
 
@@ -154,15 +242,24 @@ This ensures:
 2. **Mention Libraries**: If you want a specific library (like Chart.js), mention it
 3. **Provide Data**: If you need a chart or table, provide the data or describe the structure
 4. **Request Features**: Ask for specific interactive features you want
+5. **Request Multi-File Structure**: Ask for separate files when building larger projects
+   - Example: "Create a website with separate HTML pages, CSS files, and JavaScript modules"
+6. **Specify Folder Structure**: Mention if you want organized folders
+   - Example: "Organize the code with src/, styles/, and data/ folders"
 
 ### For the AI
 
 The AI is instructed to:
 - Include complete HTML structure (`<!DOCTYPE html>`, `<html>`, `<head>`, `<body>`)
-- Use inline CSS and JavaScript for self-contained artifacts
+- Use inline CSS and JavaScript for simple, self-contained artifacts
+- Create multi-file projects with proper organization for complex applications
+- Use the `path` property to organize files in folders (e.g., `src/app.js`, `styles/main.css`)
 - Load external libraries via CDN when appropriate
 - Ensure artifacts are responsive and work on different screen sizes
 - Add helpful titles and descriptions
+- Create multiple HTML pages when building multi-page websites
+- Include configuration and data files (JSON) when needed
+- Add documentation files (Markdown) for complex projects
 
 ## Troubleshooting
 
