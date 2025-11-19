@@ -38,31 +38,47 @@ export const HtmlArtifact = memo(function HtmlArtifact({
     description: string | null;
     html: string;
     files?: Array<{
-      name: string;
+      path?: string; // New schema
+      name?: string; // Legacy schema support
       content: string;
-      type: "css" | "js" | "ts";
+      type:
+        | "css"
+        | "js"
+        | "ts"
+        | "html"
+        | "json"
+        | "md"
+        | "svg"
+        | "txt"
+        | "xml";
     }>;
   };
 
   const { title, description, html, files } = input;
+
+  // Normalize files to use path property (support both old and new schema)
+  const normalizedFiles = files?.map((file) => ({
+    ...file,
+    path: file.path || file.name || "unknown",
+  }));
 
   // Create a blob URL for the iframe to ensure proper sandboxing
   const iframeSrc = useMemo(() => {
     let processedHtml = html;
 
     // If there are additional files, inject them into the HTML
-    if (files && files.length > 0) {
+    if (normalizedFiles && normalizedFiles.length > 0) {
       // Group files by type
-      const cssFiles = files.filter((f) => f.type === "css");
-      const jsFiles = files.filter((f) => f.type === "js");
-      const tsFiles = files.filter((f) => f.type === "ts");
+      const cssFiles = normalizedFiles.filter((f) => f.type === "css");
+      const jsFiles = normalizedFiles.filter((f) => f.type === "js");
+      const tsFiles = normalizedFiles.filter((f) => f.type === "ts");
 
       // Inject CSS files into the head
       if (cssFiles.length > 0) {
         const cssContent = cssFiles
           .map(
             (file) =>
-              `<style data-file="${file.name}">\n${file.content}\n</style>`,
+              `<style data-file="${file.path}">\n${file.content}\n</style>`,
           )
           .join("\n");
 
@@ -87,7 +103,7 @@ export const HtmlArtifact = memo(function HtmlArtifact({
         const jsContent = [...jsFiles, ...tsFiles]
           .map(
             (file) =>
-              `<script data-file="${file.name}">\n${file.content}\n</script>`,
+              `<script data-file="${file.path}">\n${file.content}\n</script>`,
           )
           .join("\n");
 
@@ -105,7 +121,7 @@ export const HtmlArtifact = memo(function HtmlArtifact({
 
     const blob = new Blob([processedHtml], { type: "text/html" });
     return URL.createObjectURL(blob);
-  }, [html, files]);
+  }, [html, normalizedFiles]);
 
   // Cleanup blob URL on unmount
   useEffect(() => {
@@ -116,12 +132,51 @@ export const HtmlArtifact = memo(function HtmlArtifact({
     };
   }, [iframeSrc]);
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
+    const projectName = title.toLowerCase().replace(/\s+/g, "-");
+
+    // If there are multiple files, create a ZIP
+    if (normalizedFiles && normalizedFiles.length > 0) {
+      try {
+        const JSZip = (await import("jszip")).default;
+        const zip = new JSZip();
+
+        // Add the main HTML file
+        zip.file("index.html", html);
+
+        // Add all other files, creating folders as needed
+        for (const file of normalizedFiles) {
+          zip.file(file.path, file.content);
+        }
+
+        // Generate the ZIP file
+        const zipBlob = await zip.generateAsync({ type: "blob" });
+        const url = URL.createObjectURL(zipBlob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${projectName}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error("Error creating ZIP:", error);
+        // Fallback to single HTML download
+        downloadSingleFile();
+      }
+    } else {
+      // Single file download
+      downloadSingleFile();
+    }
+  };
+
+  const downloadSingleFile = () => {
+    const projectName = title.toLowerCase().replace(/\s+/g, "-");
     const blob = new Blob([html], { type: "text/html" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${title.toLowerCase().replace(/\s+/g, "-")}.html`;
+    a.download = `${projectName}.html`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -143,7 +198,9 @@ export const HtmlArtifact = memo(function HtmlArtifact({
           )}
         </div>
         <Badge variant="secondary" className="text-xs">
-          HTML Artifact
+          {normalizedFiles && normalizedFiles.length > 0
+            ? `Project (${normalizedFiles.length + 1} files)`
+            : "HTML Artifact"}
         </Badge>
       </div>
 
@@ -162,10 +219,10 @@ export const HtmlArtifact = memo(function HtmlArtifact({
               <CodeIcon className="size-3 mr-1.5" />
               Code
             </TabsTrigger>
-            {files && files.length > 0 && (
+            {normalizedFiles && normalizedFiles.length > 0 && (
               <TabsTrigger value="files" className="text-xs">
                 <CodeIcon className="size-3 mr-1.5" />
-                Files ({files.length + 1})
+                Files ({normalizedFiles.length + 1})
               </TabsTrigger>
             )}
           </TabsList>
@@ -231,7 +288,7 @@ export const HtmlArtifact = memo(function HtmlArtifact({
           </div>
         </TabsContent>
 
-        {files && files.length > 0 && (
+        {normalizedFiles && normalizedFiles.length > 0 && (
           <TabsContent value="files" className="mt-0">
             <div className="flex gap-2 h-[500px]">
               {/* File list sidebar */}
@@ -246,20 +303,40 @@ export const HtmlArtifact = memo(function HtmlArtifact({
                   >
                     📄 index.html
                   </button>
-                  {files.map((file) => (
-                    <button
-                      key={file.name}
-                      onClick={() => setSelectedFile(file.name)}
-                      className={cn(
-                        "w-full text-left px-3 py-2 rounded text-xs hover:bg-accent transition-colors",
-                        selectedFile === file.name && "bg-accent",
-                      )}
-                    >
-                      {file.type === "css" && "🎨"}
-                      {file.type === "js" && "📜"}
-                      {file.type === "ts" && "📘"} {file.name}
-                    </button>
-                  ))}
+                  {normalizedFiles.map((file) => {
+                    const fileIcon =
+                      file.type === "css"
+                        ? "🎨"
+                        : file.type === "js"
+                          ? "📜"
+                          : file.type === "ts"
+                            ? "📘"
+                            : file.type === "html"
+                              ? "🌐"
+                              : file.type === "json"
+                                ? "📋"
+                                : file.type === "md"
+                                  ? "📝"
+                                  : file.type === "svg"
+                                    ? "🖼️"
+                                    : file.type === "xml"
+                                      ? "📑"
+                                      : "📄";
+
+                    return (
+                      <button
+                        key={file.path}
+                        onClick={() => setSelectedFile(file.path)}
+                        className={cn(
+                          "w-full text-left px-3 py-2 rounded text-xs hover:bg-accent transition-colors truncate",
+                          selectedFile === file.path && "bg-accent",
+                        )}
+                        title={file.path}
+                      >
+                        {fileIcon} {file.path}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -269,14 +346,28 @@ export const HtmlArtifact = memo(function HtmlArtifact({
                   <CodeBlock lang="html" code={html} />
                 ) : (
                   (() => {
-                    const file = files.find((f) => f.name === selectedFile);
+                    const file = normalizedFiles.find(
+                      (f) => f.path === selectedFile,
+                    );
                     if (!file) return null;
                     const lang =
                       file.type === "ts"
                         ? "typescript"
                         : file.type === "js"
                           ? "javascript"
-                          : "css";
+                          : file.type === "html"
+                            ? "html"
+                            : file.type === "css"
+                              ? "css"
+                              : file.type === "json"
+                                ? "json"
+                                : file.type === "md"
+                                  ? "markdown"
+                                  : file.type === "svg"
+                                    ? "xml"
+                                    : file.type === "xml"
+                                      ? "xml"
+                                      : "plaintext";
                     return <CodeBlock lang={lang} code={file.content} />;
                   })()
                 )}
