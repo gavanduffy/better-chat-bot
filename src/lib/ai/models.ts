@@ -54,12 +54,12 @@ const staticModels = {
     "opus-4.1": anthropic("claude-opus-4-1"),
   },
   xai: {
-    "grok-4-fast": litellm("grok-4-fast-non-reasoning"),
-    "grok-4": litellm("grok-4"),
-    "grok-3": litellm("grok-3"),
-    "grok-3-mini": litellm("grok-3-mini"),
-    "grok-dash-alpha": litellm("grok-dash-alpha"),
-    "grok-think-alpha": litellm("grok-think-alpha"),
+    "auto": litellm("auto"),
+    "gemini-2.5-flash": litellm("openai/gemini-2.5-flash"),
+    "gpt-5.1": litellm("openai/gpt-5.1-low"),
+    "gpt-5.1-high": litellm("openai/gpt-5.1-high"),
+    "gemini-2.5-pro": litellm("openai/gemini-2.5-pro"),
+    "qwen3-coder": litellm("openai/qwen3-coder-plus"),
   },
   ollama: {
     "gemma3:1b": ollama("gemma3:1b"),
