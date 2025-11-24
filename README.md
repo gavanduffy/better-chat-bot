@@ -26,9 +26,9 @@ You only need **one AI Provider API Key** (OpenAI, Claude, Gemini, etc.). Everyt
 **Better Chatbot** - A better open-source AI chatbot for individuals and teams, inspired by ChatGPT, Claude, Grok, and Gemini.
 
 • **Multi-AI Support** - Integrates all major LLMs: OpenAI, Anthropic, Google, xAI, Ollama, and more  
-• **Powerful Tools** - MCP protocol, web search, JS/Python code execution, data visualization  
+• **Powerful Tools** - MCP protocol, web search, JS/Python/Node.js code execution, data visualization  
 • **Image Generation** - Create and edit images with AI models (OpenAI, Google Gemini, xAI)  
-• **HTML Artifacts** - Create interactive web pages, games, and visualizations (Claude Artifacts style)  
+• **Claude-Compatible Artifacts** - Full artifact support: HTML, React, Mermaid diagrams, SVG, Node.js, and more  
 • **Automation** - Custom agents, visual workflows, artifact generation  
 • **Collaboration** - Share agents, workflows, and MCP configurations with your team  
 • **Voice Assistant** - Realtime voice chat with full MCP tool integration  
@@ -58,6 +58,7 @@ Built with Vercel AI SDK and Next.js, combining the best features of leading AI 
   - [Environment Variables](#environment-variables)
 - [📘 Guides](#-guides)
   - [🔌 MCP Server Setup \& Tool Testing](#-mcp-server-setup--tool-testing)
+  - [🎨 Claude-Compatible Artifacts](#-claude-compatible-artifacts)
   - [🐳 Docker Hosting Guide](#-docker-hosting-guide)
   - [▲ Vercel Hosting Guide](#-vercel-hosting-guide)
   - [🗂️ File Storage Drivers](#️-file-storage-drivers)
@@ -381,6 +382,10 @@ Step-by-step setup guides for running and configuring better-chatbot.
 #### [🔌 MCP Server Setup & Tool Testing](./docs/tips-guides/mcp-server-setup-and-tool-testing.md)
 
 - How to add and configure MCP servers in your environment
+
+#### [🎨 Claude-Compatible Artifacts](./docs/CLAUDE_COMPATIBILITY.md)
+
+- Complete guide to using Claude-compatible artifacts: HTML, React, Mermaid diagrams, SVG, Node.js code execution, and multi-file projects
 
 #### [🐳 Docker Hosting Guide](./docs/tips-guides/docker.md)
 
