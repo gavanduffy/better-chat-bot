@@ -36,6 +36,7 @@ export const HtmlArtifact = memo(function HtmlArtifact({
   const input = part.input as {
     title: string;
     description: string | null;
+    artifactType?: "html" | "react" | "mermaid" | "svg" | "node" | "code";
     html: string;
     files?: Array<{
       path?: string; // New schema
@@ -45,6 +46,8 @@ export const HtmlArtifact = memo(function HtmlArtifact({
         | "css"
         | "js"
         | "ts"
+        | "jsx"
+        | "tsx"
         | "html"
         | "json"
         | "md"
@@ -52,9 +55,10 @@ export const HtmlArtifact = memo(function HtmlArtifact({
         | "txt"
         | "xml";
     }>;
+    packages?: string[];
   };
 
-  const { title, description, html, files } = input;
+  const { title, description, artifactType = "html", html, files } = input;
 
   // Normalize files to use path property (support both old and new schema)
   const normalizedFiles = files?.map((file) => ({
@@ -72,6 +76,9 @@ export const HtmlArtifact = memo(function HtmlArtifact({
       const cssFiles = normalizedFiles.filter((f) => f.type === "css");
       const jsFiles = normalizedFiles.filter((f) => f.type === "js");
       const tsFiles = normalizedFiles.filter((f) => f.type === "ts");
+      const jsxFiles = normalizedFiles.filter(
+        (f) => f.type === "jsx" || f.type === "tsx",
+      );
 
       // Inject CSS files into the head
       if (cssFiles.length > 0) {
@@ -98,9 +105,9 @@ export const HtmlArtifact = memo(function HtmlArtifact({
         }
       }
 
-      // Inject JS/TS files into the body
-      if (jsFiles.length > 0 || tsFiles.length > 0) {
-        const jsContent = [...jsFiles, ...tsFiles]
+      // Inject JS/TS/JSX/TSX files into the body
+      if (jsFiles.length > 0 || tsFiles.length > 0 || jsxFiles.length > 0) {
+        const jsContent = [...jsFiles, ...tsFiles, ...jsxFiles]
           .map(
             (file) =>
               `<script data-file="${file.path}">\n${file.content}\n</script>`,
@@ -200,7 +207,17 @@ export const HtmlArtifact = memo(function HtmlArtifact({
         <Badge variant="secondary" className="text-xs">
           {normalizedFiles && normalizedFiles.length > 0
             ? `Project (${normalizedFiles.length + 1} files)`
-            : "HTML Artifact"}
+            : artifactType === "react"
+              ? "React Artifact"
+              : artifactType === "mermaid"
+                ? "Mermaid Diagram"
+                : artifactType === "svg"
+                  ? "SVG Artifact"
+                  : artifactType === "node"
+                    ? "Node.js Code"
+                    : artifactType === "code"
+                      ? "Code Artifact"
+                      : "HTML Artifact"}
         </Badge>
       </div>
 

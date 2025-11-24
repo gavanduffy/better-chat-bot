@@ -15,12 +15,13 @@ describe("htmlArtifactTool", () => {
     expect(htmlArtifactTool.inputSchema).toBeDefined();
   });
 
-  it("should execute successfully with single file", async () => {
+  it("should execute successfully with single HTML file", async () => {
     if (htmlArtifactTool.execute) {
       const result = await htmlArtifactTool.execute(
         {
           title: "Test",
           description: null,
+          artifactType: "html",
           html: "<html></html>",
         },
         {
@@ -39,6 +40,7 @@ describe("htmlArtifactTool", () => {
         {
           title: "Test Project",
           description: "A test project with multiple files",
+          artifactType: "html",
           html: "<!DOCTYPE html><html><head></head><body></body></html>",
           files: [
             {
@@ -74,6 +76,8 @@ describe("htmlArtifactTool", () => {
         "css",
         "js",
         "ts",
+        "jsx",
+        "tsx",
         "html",
         "json",
         "md",
@@ -87,6 +91,7 @@ describe("htmlArtifactTool", () => {
         {
           title: "Test All File Types",
           description: "Test all supported file types",
+          artifactType: "html",
           html: "<!DOCTYPE html><html><head></head><body></body></html>",
           files: fileTypes.map((type, index) => ({
             path: `file${index}.${type}`,
@@ -95,6 +100,8 @@ describe("htmlArtifactTool", () => {
               | "css"
               | "js"
               | "ts"
+              | "jsx"
+              | "tsx"
               | "html"
               | "json"
               | "md"
@@ -102,6 +109,83 @@ describe("htmlArtifactTool", () => {
               | "txt"
               | "xml",
           })),
+        },
+        {
+          toolCallId: "test-id",
+          messages: [],
+        },
+      );
+
+      expect(result).toBe("Artifact created successfully");
+    }
+  });
+
+  it("should support React artifacts", async () => {
+    if (htmlArtifactTool.execute) {
+      const result = await htmlArtifactTool.execute(
+        {
+          title: "React Component",
+          description: "A simple React component",
+          artifactType: "react",
+          html: "function App() { return <div>Hello React</div>; }",
+        },
+        {
+          toolCallId: "test-id",
+          messages: [],
+        },
+      );
+
+      expect(result).toBe("Artifact created successfully");
+    }
+  });
+
+  it("should support Mermaid diagrams", async () => {
+    if (htmlArtifactTool.execute) {
+      const result = await htmlArtifactTool.execute(
+        {
+          title: "Flowchart",
+          description: "A simple flowchart",
+          artifactType: "mermaid",
+          html: "graph TD;\n    A-->B;\n    A-->C;\n    B-->D;\n    C-->D;",
+        },
+        {
+          toolCallId: "test-id",
+          messages: [],
+        },
+      );
+
+      expect(result).toBe("Artifact created successfully");
+    }
+  });
+
+  it("should support SVG artifacts", async () => {
+    if (htmlArtifactTool.execute) {
+      const result = await htmlArtifactTool.execute(
+        {
+          title: "SVG Circle",
+          description: "A simple SVG circle",
+          artifactType: "svg",
+          html: '<svg><circle cx="50" cy="50" r="40" /></svg>',
+        },
+        {
+          toolCallId: "test-id",
+          messages: [],
+        },
+      );
+
+      expect(result).toBe("Artifact created successfully");
+    }
+  });
+
+  it("should support Node.js artifacts with packages", async () => {
+    if (htmlArtifactTool.execute) {
+      const result = await htmlArtifactTool.execute(
+        {
+          title: "Node.js Script",
+          description: "A Node.js script with dependencies",
+          artifactType: "node",
+          html: "const _ = require('lodash');\nconsole.log(_.VERSION);",
+          packages: ["lodash"],
         },
         {
           toolCallId: "test-id",

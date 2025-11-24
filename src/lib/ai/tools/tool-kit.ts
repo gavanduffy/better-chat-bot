@@ -8,6 +8,7 @@ import { Tool } from "ai";
 import { httpFetchTool } from "./http/fetch";
 import { jsExecutionTool } from "./code/js-run-tool";
 import { pythonExecutionTool } from "./code/python-run-tool";
+import { nodeExecutionTool } from "./code/node-run-tool";
 import { htmlArtifactTool } from "./artifact/html-artifact-tool";
 
 export const APP_DEFAULT_TOOL_KIT: Record<
@@ -30,6 +31,7 @@ export const APP_DEFAULT_TOOL_KIT: Record<
   [AppDefaultToolkit.Code]: {
     [DefaultToolName.JavascriptExecution]: jsExecutionTool,
     [DefaultToolName.PythonExecution]: pythonExecutionTool,
+    [DefaultToolName.NodeExecution]: nodeExecutionTool,
   },
   [AppDefaultToolkit.Artifact]: {
     [DefaultToolName.HtmlArtifact]: htmlArtifactTool,
