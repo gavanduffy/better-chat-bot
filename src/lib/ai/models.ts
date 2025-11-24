@@ -60,6 +60,9 @@ const staticModels = {
     "gpt-5.1-high": litellm("openai/gpt-5.1-high"),
     "gemini-2.5-pro": litellm("openai/gemini-2.5-pro"),
     "qwen3-coder": litellm("openai/qwen3-coder-plus"),
+    "gemini-3-pro": openrouter("gemini-3-pro-preview"),
+    "claude-haiku-4.5": openrouter("claude-haiku-4.5"),
+    "claude-sonnet-4.5": openrouter("claude-sonnet-4.5"),
   },
   ollama: {
     "gemma3:1b": ollama("gemma3:1b"),
@@ -86,8 +89,9 @@ const staticModels = {
     "mistral-small-3.2:free": openrouter(
       "mistralai/mistral-small-3.2-24b-instruct:free",
     ),
-    "sherlock-think-alpha": openrouter("openrouter/sherlock-think-alpha"),
-    "sherlock-dash-alpha": openrouter("openrouter/sherlock-dash-alpha"),
+    "gemini-2.5-flash-lite": openrouter("google/gemini-2.5-flash-lite"),
+    "gemini-2-flash": openrouter("google/gemini-2.0-flash-001"),
+    "grok-4.1-fast": openrouter("x-ai/grok-4.1-fast:free"),
   },
 };
 
