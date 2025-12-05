@@ -171,4 +171,22 @@ describe("PPTX Generate API", () => {
 
     expect(response.status).toBe(200);
   });
+
+  it("should sanitize filename to prevent path traversal", async () => {
+    const { POST } = await import("@/app/api/pptx/generate/route");
+
+    const request = createMockRequest({
+      html: `<section class="slide"><h1>Test</h1></section>`,
+      title: "../../../etc/passwd",
+    });
+
+    const response = await POST(request as any);
+
+    expect(response.status).toBe(200);
+    // Filename should be sanitized - no path traversal characters
+    const disposition = response.headers.get("Content-Disposition");
+    expect(disposition).not.toContain("..");
+    expect(disposition).not.toContain("/");
+    expect(disposition).toContain(".pptx");
+  });
 });

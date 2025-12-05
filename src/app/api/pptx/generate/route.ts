@@ -8,6 +8,52 @@ const logger = globalLogger.withDefaults({
   message: colorize("blackBright", `PPTX API: `),
 });
 
+// Maximum input size to prevent ReDoS attacks (10MB)
+const MAX_HTML_SIZE = 10 * 1024 * 1024;
+
+// Sanitize filename to prevent path traversal and other issues
+function sanitizeFilename(title: string): string {
+  return (
+    title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, "") // Remove special characters
+      .replace(/\s+/g, "-") // Replace spaces with hyphens
+      .replace(/-+/g, "-") // Remove multiple consecutive hyphens
+      .replace(/^-|-$/g, "") // Remove leading/trailing hyphens
+      .substring(0, 100) || "presentation"
+  ); // Limit length and provide fallback
+}
+
+// Validate image URL to prevent SSRF attacks
+function isValidImageUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    // Only allow https and data URLs
+    if (parsed.protocol === "data:") {
+      return url.startsWith("data:image/");
+    }
+    if (parsed.protocol !== "https:") {
+      return false;
+    }
+    // Block localhost, private IPs, and internal networks
+    const hostname = parsed.hostname.toLowerCase();
+    if (
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname.startsWith("192.168.") ||
+      hostname.startsWith("10.") ||
+      hostname.startsWith("172.16.") ||
+      hostname.endsWith(".local") ||
+      hostname.endsWith(".internal")
+    ) {
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // Schema for slide element positioning
 const slideElementSchema = z.object({
   type: z.enum(["title", "text", "bullet", "image"]),
@@ -30,7 +76,7 @@ const slideSchema = z.object({
 });
 
 const requestBodySchema = z.object({
-  html: z.string(),
+  html: z.string().max(MAX_HTML_SIZE),
   title: z.string().optional(),
   // Pre-parsed slides can be passed directly
   slides: z.array(slideSchema).optional(),
@@ -38,6 +84,11 @@ const requestBodySchema = z.object({
 
 // Parse HTML into slide structure
 function parseHtmlToSlides(html: string): z.infer<typeof slideSchema>[] {
+  // Input size check to prevent ReDoS
+  if (html.length > MAX_HTML_SIZE) {
+    throw new Error("HTML content exceeds maximum allowed size");
+  }
+
   const slides: z.infer<typeof slideSchema>[] = [];
 
   // Create a basic HTML parser using regex for server-side
@@ -106,17 +157,40 @@ function parseHtmlToSlides(html: string): z.infer<typeof slideSchema>[] {
   return slides;
 }
 
-// Strip HTML tags from text
+// Strip HTML tags and decode HTML entities from text
+// SECURITY NOTE: This function extracts plain text for PPTX slides.
+// The output is used as plain text in pptxgenjs addText() which does not
+// interpret HTML, so incomplete sanitization is not a security concern here.
+// The function is NOT intended for sanitizing HTML for web rendering.
 function stripHtmlTags(html: string): string {
-  return html
-    .replace(/<[^>]*>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .trim();
+  // Remove all HTML tags - apply multiple times to handle nested/malformed tags
+  let text = html;
+  let previousLength: number;
+  do {
+    previousLength = text.length;
+    text = text.replace(/<[^>]*>/g, "");
+  } while (text.length !== previousLength && text.includes("<"));
+
+  // Decode HTML entities in the correct order to prevent double-escaping issues
+  // Decode &amp; last since other entities may contain & in their encoded form
+  const entityMap: Record<string, string> = {
+    "&nbsp;": " ",
+    "&lt;": "<",
+    "&gt;": ">",
+    "&quot;": '"',
+    "&#39;": "'",
+    "&#x27;": "'",
+    "&#x2F;": "/",
+  };
+
+  for (const [entity, char] of Object.entries(entityMap)) {
+    text = text.split(entity).join(char);
+  }
+
+  // Decode &amp; last to avoid double-decoding
+  text = text.split("&amp;").join("&");
+
+  return text.trim();
 }
 
 // Generate PPTX from slides
@@ -213,11 +287,8 @@ async function generatePptx(
             break;
 
           case "image":
-            // Image handling - content should be a URL or base64
-            if (
-              element.content.startsWith("http") ||
-              element.content.startsWith("data:")
-            ) {
+            // Image handling - content should be a validated URL or base64
+            if (isValidImageUrl(element.content)) {
               slide.addImage({
                 path: element.content,
                 x: elementX,
@@ -267,8 +338,8 @@ export async function POST(request: NextRequest) {
     // Generate PPTX
     const pptxBuffer = await generatePptx(slides, title);
 
-    // Create filename
-    const filename = `${(title ?? "presentation").toLowerCase().replace(/\s+/g, "-")}.pptx`;
+    // Create sanitized filename
+    const filename = `${sanitizeFilename(title ?? "presentation")}.pptx`;
 
     // Return PPTX file
     return new NextResponse(pptxBuffer, {
