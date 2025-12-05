@@ -190,6 +190,33 @@ export const HtmlArtifact = memo(function HtmlArtifact({
 
   const handleDownloadPptx = async () => {
     try {
+      // Try server-side generation first for better quality
+      const response = await fetch("/api/pptx/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          html,
+          title,
+        }),
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${title.toLowerCase().replace(/\s+/g, "-")}.pptx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast.success("Presentation downloaded as PPTX");
+        return;
+      }
+
+      // Fallback to client-side generation
       const pptxgen = (await import("pptxgenjs")).default;
       const pres = new pptxgen();
 
