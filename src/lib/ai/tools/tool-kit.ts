@@ -36,4 +36,5 @@ export const APP_DEFAULT_TOOL_KIT: Record<
   [AppDefaultToolkit.Artifact]: {
     [DefaultToolName.HtmlArtifact]: htmlArtifactTool,
   },
+  [AppDefaultToolkit.Memory]: {},
 };

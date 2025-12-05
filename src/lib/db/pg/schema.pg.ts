@@ -12,6 +12,7 @@ import {
   unique,
   varchar,
   index,
+  vector,
 } from "drizzle-orm/pg-core";
 import { isNotNull } from "drizzle-orm";
 import { DBWorkflow, DBEdge, DBNode } from "app-types/workflow";
@@ -370,6 +371,29 @@ export const ChatExportCommentTable = pgTable("chat_export_comment", {
   createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
+
+export const UserMemoryTable = pgTable("user_memory", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => UserTable.id, { onDelete: "cascade" }),
+  fact: text("fact").notNull(),
+  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const DocumentEmbeddingTable = pgTable("document_embedding", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => UserTable.id, { onDelete: "cascade" }),
+  embedding: vector("embedding", { dimensions: 1536 }),
+  content: text("content").notNull(),
+  sourceUrl: text("source_url"),
+  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+export type UserMemoryEntity = typeof UserMemoryTable.$inferSelect;
+export type DocumentEmbeddingEntity = typeof DocumentEmbeddingTable.$inferSelect;
 
 export type ArchiveEntity = typeof ArchiveTable.$inferSelect;
 export type ArchiveItemEntity = typeof ArchiveItemTable.$inferSelect;

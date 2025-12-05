@@ -31,7 +31,7 @@ import { isShortcutEvent, Shortcuts } from "lib/keyboard-shortcuts";
 import { Button } from "ui/button";
 import { deleteThreadAction } from "@/app/api/chat/actions";
 import { useRouter } from "next/navigation";
-import { ArrowDown, Loader, FilePlus } from "lucide-react";
+import { ArrowDown, Loader } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -47,8 +47,7 @@ import dynamic from "next/dynamic";
 import { useMounted } from "@/hooks/use-mounted";
 import { getStorageManager } from "lib/browser-stroage";
 import { AnimatePresence, motion } from "framer-motion";
-import { useThreadFileUploader } from "@/hooks/use-thread-file-uploader";
-import { useFileDragOverlay } from "@/hooks/use-file-drag-overlay";
+import { FileDropZone } from "./file-drop-zone";
 
 type Props = {
   threadId: string;
@@ -73,17 +72,6 @@ firstTimeStorage.set(false);
 export default function ChatBot({ threadId, initialMessages }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(true);
-  const { uploadFiles } = useThreadFileUploader(threadId);
-  const handleFileDrop = useCallback(
-    async (files: File[]) => {
-      if (!files.length) return;
-      await uploadFiles(files);
-    },
-    [uploadFiles],
-  );
-  const { isDragging } = useFileDragOverlay({
-    onDropFiles: handleFileDrop,
-  });
 
   const [
     appStoreMutate,
@@ -412,18 +400,7 @@ export default function ChatBot({ threadId, initialMessages }: Props) {
           "flex flex-col min-w-0 relative h-full z-40",
         )}
       >
-        {isDragging && (
-          <div className="absolute inset-0 z-40 bg-background/70 backdrop-blur-sm flex items-center justify-center pointer-events-none">
-            <div className="rounded-2xl px-6 py-5 bg-background/80 shadow-xl border border-border flex items-center gap-3">
-              <div className="rounded-full bg-primary/10 p-2 text-primary">
-                <FilePlus className="size-6" />
-              </div>
-              <span className="text-sm text-muted-foreground">
-                Drop files to upload
-              </span>
-            </div>
-          </div>
-        )}
+        <FileDropZone threadId={threadId} />
         {emptyMessage ? (
           <ChatGreeting />
         ) : (
