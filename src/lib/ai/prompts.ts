@@ -52,6 +52,7 @@ export const buildUserSystemPrompt = (
   user?: User,
   userPreferences?: UserPreferences,
   agent?: Agent,
+  memories?: string[],
 ) => {
   const assistantName =
     agent?.name || userPreferences?.botName || "better-chatbot";
@@ -87,6 +88,15 @@ export const buildUserSystemPrompt = (
 <user_information>
 ${userInfo.join("\n")}
 </user_information>`;
+  }
+
+  if (memories && memories.length > 0) {
+    prompt += `
+
+<user_memory>
+The following are permanent facts you have learned about the user. Use them to personalize your responses.
+${memories.map((m) => `- ${m}`).join("\n")}
+</user_memory>`;
   }
 
   // General capabilities (secondary)

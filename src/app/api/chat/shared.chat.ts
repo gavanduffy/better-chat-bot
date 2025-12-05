@@ -40,7 +40,8 @@ import { createWorkflowExecutor } from "lib/ai/workflow/executor/workflow-execut
 import { NodeKind } from "lib/ai/workflow/workflow.interface";
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 import { APP_DEFAULT_TOOL_KIT } from "lib/ai/tools/tool-kit";
-import { AppDefaultToolkit } from "lib/ai/tools";
+import { AppDefaultToolkit, DefaultToolName } from "lib/ai/tools";
+import { createSaveMemoryTool } from "lib/ai/tools/memory/save-memory";
 
 export function filterMCPToolsByMentions(
   tools: Record<string, VercelAIMcpTool>,
@@ -428,31 +429,58 @@ export const loadWorkFlowTools = (opt: {
 export const loadAppDefaultTools = (opt?: {
   mentions?: ChatMention[];
   allowedAppDefaultToolkit?: string[];
+  userId?: string;
 }) =>
   safe(APP_DEFAULT_TOOL_KIT)
     .map((tools) => {
+      let resolvedTools: Record<string, Tool> = {};
+
       if (opt?.mentions?.length) {
         const defaultToolMentions = opt.mentions.filter(
           (m) => m.type == "defaultTool",
         );
-        return Array.from(Object.values(tools)).reduce((acc, t) => {
+        resolvedTools = Array.from(Object.values(tools)).reduce((acc, t) => {
           const allowed = objectFlow(t).filter((_, k) => {
             return defaultToolMentions.some((m) => m.name == k);
           });
           return { ...acc, ...allowed };
-        }, {});
-      }
-      const allowedAppDefaultToolkit =
-        opt?.allowedAppDefaultToolkit ?? Object.values(AppDefaultToolkit);
+        }, {}) as Record<string, Tool>;
+      } else {
+        const allowedAppDefaultToolkit =
+          opt?.allowedAppDefaultToolkit ?? Object.values(AppDefaultToolkit);
 
-      return (
-        allowedAppDefaultToolkit.reduce(
-          (acc, key) => {
-            return { ...acc, ...tools[key] };
-          },
-          {} as Record<string, Tool>,
-        ) || {}
-      );
+        resolvedTools =
+          allowedAppDefaultToolkit.reduce(
+            (acc, key) => {
+              return { ...acc, ...tools[key] };
+            },
+            {} as Record<string, Tool>,
+          ) || {};
+      }
+
+      if (opt?.userId) {
+        const isMemoryAllowed =
+          !opt.allowedAppDefaultToolkit ||
+          opt.allowedAppDefaultToolkit.includes(AppDefaultToolkit.Memory);
+
+        if (opt.mentions?.length) {
+          const memoryMentioned = opt.mentions.some(
+            (m) =>
+              m.type === "defaultTool" && m.name === DefaultToolName.SaveMemory,
+          );
+          if (memoryMentioned) {
+            resolvedTools[DefaultToolName.SaveMemory] = createSaveMemoryTool(
+              opt.userId,
+            );
+          }
+        } else if (isMemoryAllowed) {
+          resolvedTools[DefaultToolName.SaveMemory] = createSaveMemoryTool(
+            opt.userId,
+          );
+        }
+      }
+
+      return resolvedTools;
     })
     .ifFail((e) => {
       console.error(e);

@@ -87,6 +87,12 @@ Opens Playwright UI to run/debug any test configuration
 - **Dependencies**: `setup`
 - **Database State**: Seeded with admin user
 
+### `rag` Project
+- **Purpose**: Test RAG (Retrieval Augmented Generation) functionality
+- **Dependencies**: `setup`
+- **Database State**: Seeded with test users
+- **Note**: Strictly mock the OpenAI Embedding API to avoid costs
+
 ## Environment Variables
 
 ### `SKIP_FIRST_USER_TEST=1`

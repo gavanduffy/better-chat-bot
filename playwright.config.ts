@@ -48,7 +48,15 @@ export default defineConfig({
       },
       dependencies: ["setup"],
       testMatch: /.*\.spec\.ts/,
-      testIgnore: [/.*\.setup\.ts/],
+      testIgnore: [/.*\.setup\.ts/, /.*rag.*\.spec\.ts/],
+    },
+    {
+      name: "rag",
+      use: {
+        ...devices["Desktop Chrome"],
+      },
+      dependencies: ["setup"],
+      testMatch: /.*rag.*\.spec\.ts/,
     },
   ],
 

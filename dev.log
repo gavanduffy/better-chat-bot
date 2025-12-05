@@ -1,0 +1,40 @@
+
+> better-chatbot@1.25.0 dev /app
+> next dev
+
+   ▲ Next.js 15.3.2
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.0.2:3000
+   - Environments: .env
+   - Experiments (use with caution):
+     ✓ authInterrupts
+
+ ✓ Starting...
+ ○ Compiling /instrumentation ...
+ ✓ Compiled /instrumentation in 4.2s (422 modules)
+⏳ Running PostgreSQL migrations...
+❌ PostgreSQL migrations failed. check the postgres instance is running. undefined
+AggregateError:
+    at async runMigrate (src/lib/db/pg/migrate.pg.ts:9:2)
+    at async Module.register (src/instrumentation.ts:10:6)
+   7 |
+   8 |   const start = Date.now();
+>  9 |   await migrate(pgDb, {
+     |  ^
+  10 |     migrationsFolder: join(process.cwd(), "src/lib/db/migrations/pg"),
+  11 |   }).catch((err) => {
+  12 |     console.error( {
+  code: 'ECONNREFUSED'
+}
+[better-chatbot] ℹ [f29b] MCP Manager:  Initializing MCP clients manager
+
+[better-chatbot]  ERROR   MCP Config Storage:  Failed to load MCP configs from database:
+
+    at node_modules/.pnpm/pg-pool@3.10.1_pg@8.16.3/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async eval (webpack-internal:///(instrument)/./node_modules/.pnpm/drizzle-orm@0.41.0_@libsql+client@0.15.6_@opentelemetry+api@1.9.0_@types+pg@8.15.6_gel@2.1.1_kysely@0.28.8_pg@8.16.3/node_modules/drizzle-orm/node-postgres/session.js:129:22)
+    at async Object.selectAll (webpack-internal:///(instrument)/./src/lib/db/pg/repositories/mcp-repository.pg.ts:44:25)
+    at async Object.loadAll (webpack-internal:///(instrument)/./src/lib/ai/mcp/db-mcp-config-storage.ts:24:33)
+    at async eval (webpack-internal:///(instrument)/./src/lib/ai/mcp/create-mcp-clients-manager.ts:64:33)
+
+ ✓ Ready in 8.5s

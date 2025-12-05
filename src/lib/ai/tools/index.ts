@@ -4,9 +4,11 @@ export enum AppDefaultToolkit {
   Http = "http",
   Code = "code",
   Artifact = "artifact",
+  Memory = "memory",
 }
 
 export enum DefaultToolName {
+  SaveMemory = "saveMemory",
   CreatePieChart = "createPieChart",
   CreateBarChart = "createBarChart",
   CreateLineChart = "createLineChart",

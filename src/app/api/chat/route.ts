@@ -13,7 +13,7 @@ import { customModelProvider, isToolCallUnsupportedModel } from "lib/ai/models";
 
 import { mcpClientsManager } from "lib/ai/mcp/mcp-manager";
 
-import { agentRepository, chatRepository } from "lib/db/repository";
+import { agentRepository, chatRepository, memoryRepository } from "lib/db/repository";
 import globalLogger from "logger";
 import {
   buildMcpServerCustomizationsSystemPrompt,
@@ -94,6 +94,9 @@ export async function POST(request: Request) {
     if (thread!.userId !== session.user.id) {
       return new Response("Forbidden", { status: 403 });
     }
+
+    const memories = await memoryRepository.getMemories(session.user.id);
+    const memoryFacts = memories.map((m) => m.fact);
 
     const messages: UIMessage[] = (thread?.messages ?? []).map((m) => {
       return {
@@ -235,6 +238,7 @@ export async function POST(request: Request) {
             loadAppDefaultTools({
               mentions,
               allowedAppDefaultToolkit,
+              userId: session.user.id,
             }),
           )
           .orElse({});
@@ -270,7 +274,7 @@ export async function POST(request: Request) {
           .orElse({});
 
         const systemPrompt = mergeSystemPrompt(
-          buildUserSystemPrompt(session.user, userPreferences, agent),
+          buildUserSystemPrompt(session.user, userPreferences, agent, memoryFacts),
           buildMcpServerCustomizationsSystemPrompt(mcpServerCustomizations),
           !supportToolCall && buildToolCallUnsupportedModelSystemPrompt,
         );
