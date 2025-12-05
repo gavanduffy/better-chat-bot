@@ -2,6 +2,8 @@
 
 import { useCopy } from "@/hooks/use-copy";
 import { ToolUIPart } from "ai";
+import { FileTree } from "@/components/artifact/FileTree";
+import { VirtualFileSystem, VirtualFile } from "lib/artifact/virtual-fs";
 import { cn } from "lib/utils";
 import {
   CheckIcon,
@@ -39,6 +41,7 @@ export const HtmlArtifact = memo(function HtmlArtifact({
     title: string;
     description: string | null;
     html: string;
+    entryPoint?: string;
     files?: Array<{
       path?: string; // New schema
       name?: string; // Legacy schema support
@@ -52,23 +55,79 @@ export const HtmlArtifact = memo(function HtmlArtifact({
         | "md"
         | "svg"
         | "txt"
-        | "xml";
+        | "xml"
+        | "png"
+        | "jpg"
+        | "jpeg"
+        | "gif"
+        | "webp";
+      isFolder?: boolean;
+      mimeType?: string;
+      encoding?: "utf-8" | "base64";
     }>;
   };
 
-  const { title, description, html, files } = input;
+  const { title, description, html, files, entryPoint } = input;
 
   // Normalize files to use path property (support both old and new schema)
-  const normalizedFiles = files?.map((file) => ({
-    ...file,
-    path: file.path || file.name || "unknown",
-  }));
+  const normalizedFiles = useMemo(() => {
+     return files?.map((file) => ({
+      ...file,
+      path: file.path || file.name || "unknown",
+      // Ensure type matches strict type in VirtualFile
+      type: file.type || "txt",
+    })) as VirtualFile[];
+  }, [files]);
+
+  // Initialize virtual file system
+  const vfs = useMemo(() => {
+    const initialFiles: VirtualFile[] = [
+        {
+            path: "index.html",
+            content: html,
+            type: "html"
+        }
+    ];
+
+    if (normalizedFiles) {
+        initialFiles.push(...normalizedFiles);
+    }
+
+    return new VirtualFileSystem(initialFiles);
+  }, [html, normalizedFiles]);
+
+  const fileTreeRoot = useMemo(() => vfs.getFileTree(), [vfs]);
 
   // Create a blob URL for the iframe to ensure proper sandboxing
   const iframeSrc = useMemo(() => {
-    let processedHtml = html;
+    // If we have an explicit entry point, try to find it
+    let mainFile = vfs.readFile(entryPoint || "index.html");
 
-    // If there are additional files, inject them into the HTML
+    // Fallback to html input if index.html is requested but not in explicit files
+    // (Though we added it to VFS, so it should be there)
+
+    if (!mainFile) {
+        // Find any html file
+        const allFiles = vfs.getAllFiles();
+        mainFile = allFiles.find(f => f.type === 'html');
+    }
+
+    if (!mainFile) return "";
+
+    let processedHtml = mainFile.content;
+
+    // For now, we stick with the simple injection logic for backward compatibility
+    // but extended to use VFS concepts if needed.
+    // However, if it's a multi-file project, we might want to just serve the entry point
+    // and let the browser resolve relative paths if we could intercept them.
+    // Since we are using a blob URL, relative paths won't work out of the box unless we construct
+    // a complex blob or use a service worker (which is hard in this context).
+
+    // So we continue with injection for single-file-like behavior,
+    // BUT for "Project" structure we really need a way to handle relative paths.
+    // The current implementation only injects JS/CSS. It doesn't handle images or relative links.
+
+    // IMPROVEMENT: Basic handling of relative JS/CSS injection based on VFS
     if (normalizedFiles && normalizedFiles.length > 0) {
       // Group files by type
       const cssFiles = normalizedFiles.filter((f) => f.type === "css");
@@ -123,7 +182,7 @@ export const HtmlArtifact = memo(function HtmlArtifact({
 
     const blob = new Blob([processedHtml], { type: "text/html" });
     return URL.createObjectURL(blob);
-  }, [html, normalizedFiles]);
+  }, [html, normalizedFiles, vfs, entryPoint]);
 
   // Cleanup blob URL on unmount
   useEffect(() => {
@@ -394,68 +453,33 @@ export const HtmlArtifact = memo(function HtmlArtifact({
           <TabsContent value="files" className="mt-0">
             <div className="flex gap-2 h-[500px]">
               {/* File list sidebar */}
-              <div className="w-48 border rounded-lg overflow-auto bg-muted/20">
-                <div className="p-2 space-y-1">
-                  <button
-                    onClick={() => setSelectedFile("index.html")}
-                    className={cn(
-                      "w-full text-left px-3 py-2 rounded text-xs hover:bg-accent transition-colors",
-                      selectedFile === "index.html" && "bg-accent",
-                    )}
-                  >
-                    📄 index.html
-                  </button>
-                  {normalizedFiles.map((file) => {
-                    const fileIcon =
-                      file.type === "css"
-                        ? "🎨"
-                        : file.type === "js"
-                          ? "📜"
-                          : file.type === "ts"
-                            ? "📘"
-                            : file.type === "html"
-                              ? "🌐"
-                              : file.type === "json"
-                                ? "📋"
-                                : file.type === "md"
-                                  ? "📝"
-                                  : file.type === "svg"
-                                    ? "🖼️"
-                                    : file.type === "xml"
-                                      ? "📑"
-                                      : "📄";
-
-                    return (
-                      <button
-                        key={file.path}
-                        onClick={() => setSelectedFile(file.path)}
-                        className={cn(
-                          "w-full text-left px-3 py-2 rounded text-xs hover:bg-accent transition-colors truncate",
-                          selectedFile === file.path && "bg-accent",
-                        )}
-                        title={file.path}
-                      >
-                        {fileIcon} {file.path}
-                      </button>
-                    );
-                  })}
+              <div className="w-64 border rounded-lg overflow-hidden bg-muted/20 flex flex-col">
+                <div className="p-2 border-b text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Files
                 </div>
+                <FileTree
+                    root={fileTreeRoot}
+                    selectedPath={selectedPath => setSelectedFile(selectedPath)}
+                    selectedPath={selectedFile}
+                    onSelectFile={setSelectedFile}
+                    className="flex-1"
+                />
               </div>
 
               {/* File content viewer */}
               <div className="flex-1 border rounded-lg overflow-auto">
-                {selectedFile === "index.html" ? (
-                  <CodeBlock lang="html" code={html} />
-                ) : (
-                  (() => {
-                    const file = normalizedFiles.find(
-                      (f) => f.path === selectedFile,
+                {(() => {
+                    const file = vfs.readFile(selectedFile);
+                    if (!file) return (
+                        <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+                            Select a file to view content
+                        </div>
                     );
-                    if (!file) return null;
+
                     const lang =
-                      file.type === "ts"
+                      file.type === "ts" || file.type === "tsx"
                         ? "typescript"
-                        : file.type === "js"
+                        : file.type === "js" || file.type === "jsx"
                           ? "javascript"
                           : file.type === "html"
                             ? "html"
@@ -465,14 +489,11 @@ export const HtmlArtifact = memo(function HtmlArtifact({
                                 ? "json"
                                 : file.type === "md"
                                   ? "markdown"
-                                  : file.type === "svg"
+                                  : file.type === "svg" || file.type === "xml"
                                     ? "xml"
-                                    : file.type === "xml"
-                                      ? "xml"
-                                      : "plaintext";
+                                    : "plaintext";
                     return <CodeBlock lang={lang} code={file.content} />;
-                  })()
-                )}
+                  })()}
               </div>
             </div>
           </TabsContent>

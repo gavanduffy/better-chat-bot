@@ -72,6 +72,12 @@ Examples of multi-file projects:
       .describe(
         "Complete HTML document including DOCTYPE, html, head, and body tags. This is the main entry point (index.html) for the artifact.",
       ),
+    entryPoint: z
+      .string()
+      .optional()
+      .describe(
+        "The main entry point file path (e.g., 'index.html', 'main.html'). If not provided, it defaults to the 'html' content as index.html.",
+      ),
     files: z
       .array(
         z.object({
@@ -92,10 +98,27 @@ Examples of multi-file projects:
               "svg",
               "txt",
               "xml",
+              "png",
+              "jpg",
+              "jpeg",
+              "gif",
+              "webp",
             ])
             .describe(
-              "File type: css, js (JavaScript), ts (TypeScript), html, json, md (Markdown), svg, txt, or xml",
+              "File type: css, js (JavaScript), ts (TypeScript), html, json, md (Markdown), svg, txt, xml, or image types",
             ),
+          isFolder: z
+            .boolean()
+            .optional()
+            .describe("If true, this represents an empty folder"),
+          mimeType: z
+            .string()
+            .optional()
+            .describe("MIME type of the file (e.g., 'image/png', 'text/css')"),
+          encoding: z
+            .enum(["utf-8", "base64"])
+            .optional()
+            .describe("File encoding, defaults to utf-8. Use base64 for binary files like images."),
         }),
       )
       .optional()
