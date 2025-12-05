@@ -11,8 +11,10 @@ import {
   EyeIcon,
   MaximizeIcon,
   MinimizeIcon,
+  PresentationIcon,
 } from "lucide-react";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import { CodeBlock } from "ui/CodeBlock";
 import { Badge } from "ui/badge";
 import { Button } from "ui/button";
@@ -159,8 +161,10 @@ export const HtmlArtifact = memo(function HtmlArtifact({
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+        toast.success("Project downloaded as ZIP");
       } catch (error) {
         console.error("Error creating ZIP:", error);
+        toast.error("Failed to create ZIP");
         // Fallback to single HTML download
         downloadSingleFile();
       }
@@ -181,6 +185,94 @@ export const HtmlArtifact = memo(function HtmlArtifact({
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    toast.success("Artifact downloaded");
+  };
+
+  const handleDownloadPptx = async () => {
+    try {
+      const pptxgen = (await import("pptxgenjs")).default;
+      const pres = new pptxgen();
+
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, "text/html");
+
+      // Look for slides defined by class "slide" or section tags
+      const slides = doc.querySelectorAll(".slide, section");
+
+      if (slides.length === 0) {
+        toast.error(
+          "No slides detected. Please ensure the HTML contains elements with class 'slide' or <section> tags.",
+        );
+        return;
+      }
+
+      slides.forEach((slideEl) => {
+        const slide = pres.addSlide();
+
+        // Extract title (h1-h6)
+        const titleEl = slideEl.querySelector("h1, h2, h3, h4, h5, h6");
+        let yPos = 0.5;
+
+        if (titleEl) {
+          const titleText = titleEl.textContent?.trim() || "";
+          slide.addText(titleText, {
+            x: 0.5,
+            y: yPos,
+            w: "90%",
+            h: 1,
+            fontSize: 24,
+            bold: true,
+            color: "363636",
+          });
+          yPos += 1.0;
+        }
+
+        // Extract content (p, ul, ol, img)
+        // We look for direct children or simplified content structure
+        const contentElements = slideEl.querySelectorAll("p, li, img");
+
+        contentElements.forEach((el) => {
+          // Skip if element is inside the title we already processed
+          if (titleEl && titleEl.contains(el)) return;
+
+          if (el.tagName === "IMG") {
+            const img = el as HTMLImageElement;
+            const src = img.getAttribute("src");
+            if (src) {
+              // Handle relative paths if they are in the project files
+              // This is complex for blob urls or local files.
+              // For now, assume remote URLs or skip.
+              // If it's a data URL it works.
+              if (src.startsWith("http") || src.startsWith("data:")) {
+                slide.addImage({ path: src, x: 0.5, y: yPos, w: 4, h: 3 });
+                yPos += 3.2;
+              }
+            }
+          } else {
+            const text = el.textContent?.trim();
+            if (text) {
+              slide.addText(text, {
+                x: 0.5,
+                y: yPos,
+                w: "90%",
+                h: 0.5,
+                fontSize: 14,
+                bullet: el.tagName === "LI",
+                color: "666666",
+              });
+              yPos += 0.6;
+            }
+          }
+        });
+      });
+
+      const projectName = title.toLowerCase().replace(/\s+/g, "-");
+      await pres.writeFile({ fileName: `${projectName}.pptx` });
+      toast.success("Presentation downloaded as PPTX");
+    } catch (error) {
+      console.error("Error generating PPTX:", error);
+      toast.error("Failed to generate PPTX");
+    }
   };
 
   return (
@@ -245,8 +337,18 @@ export const HtmlArtifact = memo(function HtmlArtifact({
               size="icon"
               className="size-8"
               onClick={handleDownload}
+              title="Download Artifact"
             >
               <DownloadIcon className="size-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              onClick={handleDownloadPptx}
+              title="Download as PPTX"
+            >
+              <PresentationIcon className="size-3.5" />
             </Button>
             {activeTab === "preview" && (
               <Button
