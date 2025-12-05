@@ -50,6 +50,7 @@ Built with Vercel AI SDK and Next.js, combining the best features of leading AI 
   - [🛠️ Default Tools](#️-default-tools)
     - [🌐 Web Search](#-web-search)
     - [⚡️ JS,PYTHON Executor](#️-jspython-executor)
+    - [🐳 WebContainers (Node.js Runtime)](#-webcontainers-nodejs-runtime)
     - [📊 Data Visualization Tools](#-data-visualization-tools)
     - [🔊 Text-to-Speech (TTS)](#-text-to-speech-tts)
 - [Getting Started](#getting-started)
@@ -196,6 +197,28 @@ Built-in image generation and editing capabilities powered by AI models. Create,
 <img width="1225" alt="js-executor-preview" src="https://github.com/user-attachments/assets/7deed824-e70b-46d4-a294-de20ed4dc869" loading="lazy"/>
 
 It is a simple JS execution tool.
+
+#### 🐳 WebContainers (Node.js Runtime)
+
+Run complete Node.js applications directly in the browser with **WebContainers** powered by StackBlitz.
+
+- **Full Node.js Environment**: Execute multi-file Node.js projects with npm package support
+- **Server Preview**: When an Express/Fastify server starts, see a live preview URL embedded in the chat
+- **npm Dependencies**: Automatically install and use npm packages (express, axios, lodash, etc.)
+- **Real-time Console**: View stdout/stderr output as the code executes
+
+**Browser Requirements:**
+- Chrome 102+, Edge 102+, or Safari 16.4+
+- Cross-origin isolation headers are automatically configured
+
+**Example Prompts:**
+- "Create an Express API with a /hello endpoint"
+- "Build a simple REST API that returns JSON data"
+- "Create a Node.js script that fetches data from an API"
+
+**When to Use:**
+- Use WebContainers for Node.js apps with npm dependencies
+- Use the simple JS Executor for quick calculations without dependencies
 
 #### 📊 Data Visualization Tools
 
@@ -424,9 +447,9 @@ Planned features coming soon to better-chatbot:
 - [x] **File Upload & Storage** (Vercel Blob integration)
 - [x] **Image Generation**
 - [x] **HTML Artifacts / Canvas** (interactive HTML documents rendered in chat)
+- [x] **Web-based Compute** (with [WebContainers](https://webcontainers.io) integration)
 - [ ] **Collaborative Document Editing** (like OpenAI Canvas: user & assistant co-editing)
 - [ ] **RAG (Retrieval-Augmented Generation)**
-- [ ] **Web-based Compute** (with [WebContainers](https://webcontainers.io) integration)
 
 💡 If you have suggestions or need specific features, please create an [issue](https://github.com/cgoinglove/better-chatbot/issues)!
 

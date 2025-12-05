@@ -16,6 +16,7 @@ export enum DefaultToolName {
   Http = "http",
   JavascriptExecution = "mini-javascript-execution",
   PythonExecution = "python-execution",
+  WebContainerExecution = "webcontainer-execution",
   HtmlArtifact = "html-artifact",
 }
 

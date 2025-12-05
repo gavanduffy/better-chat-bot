@@ -83,6 +83,7 @@
     "@tiptap/starter-kit": "^2.27.1",
     "@tiptap/suggestion": "^2.27.1",
     "@vercel/blob": "^2.0.0",
+    "@webcontainer/api": "^1.6.1",
     "@xyflow/react": "^12.9.1",
     "ai": "^5.0.82",
     "bcrypt-ts": "^7.1.0",
