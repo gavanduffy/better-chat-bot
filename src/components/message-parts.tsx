@@ -717,6 +717,17 @@ const CodeExecutor = dynamic(
   },
 );
 
+const WebContainerExecutor = dynamic(
+  () =>
+    import("./tool-invocation/webcontainer-executor").then(
+      (mod) => mod.WebContainerExecutor,
+    ),
+  {
+    ssr: false,
+    loading,
+  },
+);
+
 const ImageGeneratorToolInvocation = dynamic(
   () =>
     import("./tool-invocation/image-generator").then(
@@ -909,6 +920,16 @@ export const ToolMessagePart = memo(
             key={part.toolCallId}
             onResult={onToolCallDirect}
             type="python"
+          />
+        );
+      }
+
+      if (toolName === DefaultToolName.WebContainerExecution) {
+        return (
+          <WebContainerExecutor
+            part={part}
+            key={part.toolCallId}
+            onResult={onToolCallDirect}
           />
         );
       }
