@@ -426,7 +426,7 @@ export const WebContainerExecutor = memo(function WebContainerExecutor({
                     src={serverInfo.url}
                     className="w-full h-full border-0"
                     title="WebContainer Preview"
-                    sandbox="allow-scripts allow-forms allow-modals allow-popups allow-same-origin"
+                    sandbox="allow-scripts allow-forms allow-same-origin"
                   />
                 </div>
               </TabsContent>

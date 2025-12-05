@@ -60,13 +60,17 @@ class WebContainerManager {
             file: { contents },
           };
         } else {
-          if (!current[part]) {
+          const existing = current[part];
+          // Check if entry exists and is a directory
+          if (!existing) {
             current[part] = {
               directory: {},
             };
+          } else if (!("directory" in existing)) {
+            // Entry exists but is not a directory, skip this path
+            break;
           }
-          const dir = current[part] as { directory: FileSystemTree };
-          current = dir.directory;
+          current = (current[part] as { directory: FileSystemTree }).directory;
         }
       }
     }
@@ -86,22 +90,33 @@ class WebContainerManager {
     onLog?: (log: WebContainerLogEntry) => void,
   ): Promise<{ success: boolean; exitCode: number }> {
     const instance = await this.boot();
-    const installProcess = await instance.spawn("npm", ["install"]);
+    
+    try {
+      const installProcess = await instance.spawn("npm", ["install"]);
 
-    installProcess.output.pipeTo(
-      new WritableStream({
-        write(data) {
-          onLog?.({
-            type: "stdout",
-            message: data,
-            timestamp: Date.now(),
-          });
-        },
-      }),
-    );
+      installProcess.output.pipeTo(
+        new WritableStream({
+          write(data) {
+            onLog?.({
+              type: "stdout",
+              message: data,
+              timestamp: Date.now(),
+            });
+          },
+        }),
+      );
 
-    const exitCode = await installProcess.exit;
-    return { success: exitCode === 0, exitCode };
+      const exitCode = await installProcess.exit;
+      return { success: exitCode === 0, exitCode };
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "npm install failed";
+      onLog?.({
+        type: "stderr",
+        message,
+        timestamp: Date.now(),
+      });
+      return { success: false, exitCode: 1 };
+    }
   }
 
   /** Run a command in the WebContainer */
@@ -182,13 +197,15 @@ class WebContainerManager {
 
       // Add package.json if provided or if installDeps is true
       if (packageJson || installDeps) {
+        // Only add default start script if not already provided
+        const defaultStart = command.startsWith("node") ? command : undefined;
         const pkgJson = {
           name: "webcontainer-project",
           type: "module",
           ...packageJson,
           dependencies: packageJson?.dependencies || {},
           scripts: {
-            start: command.startsWith("node") ? command : "node index.js",
+            ...(defaultStart ? { start: defaultStart } : {}),
             ...packageJson?.scripts,
           },
         };
@@ -258,10 +275,14 @@ class WebContainerManager {
       );
 
       // Wait for process to complete with timeout
+      let timeoutId: ReturnType<typeof setTimeout> | undefined;
       const exitCode = await Promise.race([
-        process.exit,
+        process.exit.then((code) => {
+          if (timeoutId) clearTimeout(timeoutId);
+          return code;
+        }),
         new Promise<number>((_, reject) => {
-          setTimeout(() => {
+          timeoutId = setTimeout(() => {
             process.kill();
             reject(new Error(`Execution timeout: ${timeout}ms exceeded`));
           }, timeout);
