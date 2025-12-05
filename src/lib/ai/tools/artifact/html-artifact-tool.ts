@@ -30,6 +30,13 @@ For multi-file artifacts and projects:
 - JavaScript/TypeScript files will be automatically bundled and injected
 - You can create multiple HTML pages (e.g., 'index.html', 'about.html', 'contact.html')
 
+For presentations and slides:
+- Use a container (e.g., <div class="slides">) for the presentation
+- Use <section class="slide"> for each individual slide
+- Use <h1> or <h2> for slide titles
+- Use <ul> or <ol> for bullet points
+- This structure allows the artifact to be exported as a PPTX file
+
 For styling, you can use:
 - Inline styles or <style> tags
 - Separate CSS files
