@@ -1,5 +1,6 @@
 import { Agent } from "app-types/agent";
 import { DefaultToolName } from "lib/ai/tools";
+import { EMAIL_ASSISTANT_SYSTEM_PROMPT } from "lib/email-assistant/prompt";
 
 export const RandomDataGeneratorExample: Partial<Agent> = {
   name: "Data & Table Generator",
@@ -109,5 +110,23 @@ User: "Weather for Seoul"
 
 Always use this specific Open-Meteo API endpoint. No API key required.
 `.trim(),
+  },
+};
+
+export const EmailAssistantExample: Partial<Agent> = {
+  name: "@email_assistant",
+  description:
+    "Scan Gmail inboxes, extract tasks, and prepare calendar and newsletter actions.",
+  icon: {
+    type: "emoji",
+    style: {
+      backgroundColor: "rgb(52, 211, 153)",
+    },
+    value:
+      "https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f4e7.png",
+  },
+  instructions: {
+    role: "Email Assistant",
+    systemPrompt: EMAIL_ASSISTANT_SYSTEM_PROMPT,
   },
 };

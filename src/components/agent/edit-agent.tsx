@@ -37,6 +37,7 @@ import { GenerateAgentDialog } from "./generate-agent-dialog";
 import { AgentIconPicker } from "./agent-icon-picker";
 import { AgentToolSelector } from "./agent-tool-selector";
 import {
+  EmailAssistantExample,
   RandomDataGeneratorExample,
   WeatherExample,
 } from "lib/ai/agent/example";
@@ -367,6 +368,14 @@ export default function EditAgent({
                       <div className="flex items-center gap-2">
                         <span>🌤️</span>
                         <span>Weather Checker</span>
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => setAgent(EmailAssistantExample)}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span>📧</span>
+                        <span>Email Assistant</span>
                       </div>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
