@@ -12,6 +12,7 @@ import {
   unique,
   varchar,
   index,
+  integer,
 } from "drizzle-orm/pg-core";
 import { isNotNull } from "drizzle-orm";
 import { DBWorkflow, DBEdge, DBNode } from "app-types/workflow";
@@ -371,6 +372,121 @@ export const ChatExportCommentTable = pgTable("chat_export_comment", {
   updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
+export const EmailScanTable = pgTable(
+  "email_scan",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => UserTable.id, { onDelete: "cascade" }),
+    scanTime: timestamp("scan_time").notNull().default(sql`CURRENT_TIMESTAMP`),
+    emailsProcessed: integer("emails_processed").notNull().default(0),
+    importantCount: integer("important_count").notNull().default(0),
+    tasksFound: integer("tasks_found").notNull().default(0),
+    eventsCreated: integer("events_created").notNull().default(0),
+    newslettersDetected: integer("newsletters_detected").notNull().default(0),
+  },
+  (table) => [index("email_scan_user_id_idx").on(table.userId)],
+);
+
+export const EmailTaskTable = pgTable(
+  "email_task",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => UserTable.id, { onDelete: "cascade" }),
+    messageId: text("message_id").notNull(),
+    threadId: text("thread_id"),
+    taskDescription: text("task_description").notNull(),
+    dueDate: timestamp("due_date"),
+    priority: varchar("priority", { length: 10 }).notNull().default("medium"),
+    status: varchar("status", { length: 20 }).notNull().default("pending"),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("email_task_user_id_idx").on(table.userId),
+    unique().on(table.userId, table.messageId, table.taskDescription),
+  ],
+);
+
+export const EmailCalendarEventTable = pgTable(
+  "email_calendar_event",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => UserTable.id, { onDelete: "cascade" }),
+    messageId: text("message_id").notNull(),
+    calendarEventId: text("calendar_event_id"),
+    eventSummary: text("event_summary").notNull(),
+    eventStart: timestamp("event_start"),
+    eventEnd: timestamp("event_end"),
+    autoCreated: boolean("auto_created").notNull().default(false),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("email_calendar_event_user_id_idx").on(table.userId),
+    unique().on(table.userId, table.messageId, table.eventSummary),
+  ],
+);
+
+export const EmailSubscriptionTable = pgTable(
+  "email_subscription",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => UserTable.id, { onDelete: "cascade" }),
+    senderEmail: text("sender_email").notNull(),
+    senderName: text("sender_name"),
+    frequency: varchar("frequency", { length: 20 }),
+    lastReceived: timestamp("last_received"),
+    unsubscribeLink: text("unsubscribe_link"),
+    status: varchar("status", { length: 20 }).notNull().default("active"),
+    userPreference: varchar("user_preference", { length: 20 })
+      .notNull()
+      .default("keep"),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("email_subscription_user_id_idx").on(table.userId),
+    unique().on(table.userId, table.senderEmail),
+  ],
+);
+
+export const EmailPreferenceTable = pgTable(
+  "email_preference",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => UserTable.id, { onDelete: "cascade" }),
+    preferenceType: varchar("preference_type", { length: 50 }).notNull(),
+    value: varchar("value", { length: 255 }).notNull(),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (table) => [
+    index("email_preference_user_id_idx").on(table.userId),
+    unique().on(table.userId, table.preferenceType, table.value),
+  ],
+);
+
 export type ArchiveEntity = typeof ArchiveTable.$inferSelect;
 export type ArchiveItemEntity = typeof ArchiveItemTable.$inferSelect;
 export type BookmarkEntity = typeof BookmarkTable.$inferSelect;
+export type EmailScanEntity = typeof EmailScanTable.$inferSelect;
+export type EmailTaskEntity = typeof EmailTaskTable.$inferSelect;
+export type EmailCalendarEventEntity =
+  typeof EmailCalendarEventTable.$inferSelect;
+export type EmailSubscriptionEntity =
+  typeof EmailSubscriptionTable.$inferSelect;
+export type EmailPreferenceEntity = typeof EmailPreferenceTable.$inferSelect;
