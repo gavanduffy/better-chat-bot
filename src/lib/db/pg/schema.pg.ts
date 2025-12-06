@@ -371,6 +371,63 @@ export const ChatExportCommentTable = pgTable("chat_export_comment", {
   updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
 
+// User Memory Table - stores long-term facts about the user
+// Used by the AI to remember preferences, habits, and contextual information
+export const UserMemoryTable = pgTable(
+  "user_memory",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => UserTable.id, { onDelete: "cascade" }),
+    fact: text("fact").notNull(),
+    tags: json("tags").$type<string[]>().default([]),
+    source: text("source"), // Where this fact was learned (e.g., "conversation", "user_input")
+    confidence: text("confidence")
+      .$type<"high" | "medium" | "low">()
+      .default("medium"),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [
+    index("user_memory_user_id_idx").on(t.userId),
+    index("user_memory_created_at_idx").on(t.createdAt),
+  ],
+);
+
+// Document Embedding Table - stores vector embeddings for RAG functionality
+// Used for "Chat with my PDF" and other document-aware features
+export const DocumentEmbeddingTable = pgTable(
+  "document_embedding",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => UserTable.id, { onDelete: "cascade" }),
+    content: text("content").notNull(), // The text chunk
+    sourceUrl: text("source_url"), // URL or file path of the source document
+    sourceTitle: text("source_title"), // Title of the source document
+    chunkIndex: text("chunk_index"), // Index of this chunk within the document
+    metadata: json("metadata").$type<Record<string, unknown>>().default({}),
+    // Note: For pgvector support, add: vector: vector("vector", { dimensions: 1536 })
+    // This requires enabling the pgvector extension in PostgreSQL
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  },
+  (t) => [
+    index("document_embedding_user_id_idx").on(t.userId),
+    index("document_embedding_source_idx").on(t.sourceUrl),
+  ],
+);
+
 export type ArchiveEntity = typeof ArchiveTable.$inferSelect;
 export type ArchiveItemEntity = typeof ArchiveItemTable.$inferSelect;
 export type BookmarkEntity = typeof BookmarkTable.$inferSelect;
+export type UserMemoryEntity = typeof UserMemoryTable.$inferSelect;
+export type DocumentEmbeddingEntity =
+  typeof DocumentEmbeddingTable.$inferSelect;
