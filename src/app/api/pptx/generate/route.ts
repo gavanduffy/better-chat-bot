@@ -341,8 +341,8 @@ export async function POST(request: NextRequest) {
     // Create sanitized filename
     const filename = `${sanitizeFilename(title ?? "presentation")}.pptx`;
 
-    // Return PPTX file
-    return new NextResponse(pptxBuffer, {
+    // Return PPTX file - convert Buffer to Uint8Array for NextResponse
+    return new NextResponse(new Uint8Array(pptxBuffer), {
       headers: {
         "Content-Type":
           "application/vnd.openxmlformats-officedocument.presentationml.presentation",
@@ -354,7 +354,7 @@ export async function POST(request: NextRequest) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Invalid request body", details: error.errors },
+        { error: "Invalid request body", details: error.issues },
         { status: 400 },
       );
     }
